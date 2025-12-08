@@ -3,20 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>女巫的毒药 - 歌曲挑战</title>
+    <title>女巫的毒药 (P2P版)</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- PeerJS (国内 BootCDN 加速) -->
+    <script src="https://cdn.bootcdn.net/ajax/libs/peerjs/1.5.2/peerjs.min.js"></script>
+
     <style>
-        /* iOS Style System Font */
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
-            background-color: #f5f5f7; /* Apple Light Grey */
+            background-color: #f5f5f7;
             color: #1d1d1f;
             overflow-x: hidden;
             -webkit-tap-highlight-color: transparent;
             user-select: none;
         }
 
-        /* Apple Card Style */
         .ios-card {
             background: rgba(255, 255, 255, 0.8);
             backdrop-filter: saturate(180%) blur(20px);
@@ -25,7 +27,6 @@
             border: 1px solid rgba(255, 255, 255, 0.4);
         }
 
-        /* Button Animations */
         .ios-btn {
             transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
         }
@@ -34,126 +35,93 @@
             opacity: 0.8;
         }
 
-        /* Slide Transition */
         .slide-up {
-            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            animation: slideUp 0.5s ease-out;
         }
 
         @keyframes slideUp {
-            from { opacity: 0; transform: translateY(30px); }
+            from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Mode Selection */
-        .mode-card {
-            border: 2px solid transparent;
-            background: white;
-            transition: all 0.2s ease;
+        .spinner {
+            border: 3px solid rgba(0, 113, 227, 0.1);
+            border-left-color: #0071e3;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
         }
-        .mode-card.selected {
-            border-color: #0071e3; /* iOS Blue */
-            background: #f0f8ff;
-            box-shadow: 0 4px 12px rgba(0, 113, 227, 0.15);
-        }
-        .mode-card:not(.selected) {
-            opacity: 0.6;
-            filter: grayscale(100%);
-        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* 4x4 Grid for Remote View */
-        .big-grid-cell {
-            aspect-ratio: 1;
-            display: flex;
-            flex-direction: column;
+        .status-badge {
+            display: inline-flex;
             align-items: center;
-            justify-content: center;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-            position: relative;
-            overflow: hidden;
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 600;
         }
-        .number-tag {
-            font-size: 2rem; 
-            font-weight: 800;
-            color: #0071e3;
-            line-height: 1;
-        }
-        .song-name-tag {
-            font-size: 0.8rem;
-            color: #86868b;
-            text-align: center;
-            line-height: 1.2;
-            margin-top: 4px;
-            padding: 0 2px;
-            font-weight: 500;
-        }
-
-        /* Modal Overlay */
-        .modal-bg {
-            background-color: rgba(245, 245, 247, 0.98); /* Opaque light bg */
-        }
-        
-        /* Grid Layout Fixes */
-        .grid-4x4 {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
-        }
-
     </style>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-4">
 
-    <!-- Screen 1: Home / Rules -->
-    <div id="screen-home" class="w-full max-w-md space-y-6 slide-up text-center">
+    <!-- Screen 1: Lobby -->
+    <div id="screen-lobby" class="w-full max-w-md space-y-6 slide-up text-center">
         <div class="pt-8 pb-4">
             <h1 class="text-4xl font-extrabold tracking-tight text-gray-900 mb-1">女巫的毒药</h1>
-            <p class="text-gray-500 text-sm font-medium tracking-wide">双人默契挑战 · 歌曲版</p>
+            <p class="text-gray-500 text-sm font-medium tracking-wide">国内畅玩 · P2P联机版</p>
         </div>
 
-        <!-- Mode Selection -->
-        <div class="grid grid-cols-2 gap-4 px-2">
-            <div id="mode-local" onclick="selectMode('local')" class="mode-card p-5 rounded-2xl cursor-pointer shadow-sm">
-                <div class="text-3xl mb-2">🤝</div>
-                <h3 class="font-bold text-gray-900 text-sm">面对面</h3>
-                <p class="text-xs text-gray-500 mt-1">传递手机</p>
+        <div class="space-y-4 px-2">
+            <button onclick="createRoom()" class="w-full bg-[#0071e3] hover:bg-[#0077ED] text-white font-semibold py-5 px-8 rounded-2xl shadow-lg ios-btn flex items-center justify-center gap-3">
+                <span>🏠</span> 创建房间 (我是房主)
+            </button>
+            
+            <div class="relative">
+                <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-gray-300"></div>
+                </div>
+                <div class="relative flex justify-center text-sm">
+                    <span class="px-2 bg-[#f5f5f7] text-gray-500">或者</span>
+                </div>
             </div>
-            <div id="mode-remote" onclick="selectMode('remote')" class="mode-card p-5 rounded-2xl cursor-pointer shadow-sm">
-                <div class="text-3xl mb-2">📹</div>
-                <h3 class="font-bold text-gray-900 text-sm">远程连线</h3>
-                <p class="text-xs text-gray-500 mt-1">视频报号</p>
+
+            <div class="flex gap-2">
+                <input id="room-code-input" type="number" placeholder="输入房主给的房间号" class="flex-1 p-4 rounded-2xl border border-gray-300 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 font-mono text-center text-lg">
+                <button onclick="joinRoom()" class="bg-gray-900 text-white font-semibold px-6 rounded-2xl ios-btn">
+                    加入
+                </button>
             </div>
         </div>
 
-        <div class="ios-card p-6 text-left mx-2">
-            <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">游戏规则</h2>
-            <ul class="space-y-3 text-sm text-gray-700 font-medium">
-                <li class="flex items-start">
-                    <span class="mr-3 text-blue-500 font-bold">1</span>
-                    <span>每局随机抽取 16 首歌，双方各选 1 首作为<span class="text-red-500">毒药</span>。</span>
-                </li>
-                <li class="flex items-start">
-                    <span class="mr-3 text-blue-500 font-bold">2</span>
-                    <span>轮流点歌，点到即唱。若点中对方毒药则<span class="text-red-500">立即淘汰</span>。</span>
-                </li>
-                <li class="flex items-start">
-                    <span class="mr-3 text-blue-500 font-bold">3</span>
-                    <span><span class="text-blue-600">连线模式：</span>你向镜头展示盘面，对方报号后，你点击屏幕录入，系统会自动打乱顺序。</span>
-                </li>
-            </ul>
-        </div>
-
-        <button onclick="startGame()" class="w-full bg-[#0071e3] hover:bg-[#0077ED] text-white font-semibold py-4 px-8 rounded-2xl shadow-lg ios-btn text-lg mt-4">
-            开始挑战
-        </button>
+        <div id="connection-status" class="text-xs text-gray-400 mt-4 h-4"></div>
     </div>
 
-    <!-- Screen 2: Setup Phase (Player Selection) -->
+    <!-- Screen 2: Waiting Room -->
+    <div id="screen-waiting" class="hidden w-full max-w-md flex-col items-center justify-center h-screen slide-up">
+        <div class="ios-card p-8 w-full text-center space-y-6">
+            <div class="spinner mx-auto mb-2"></div>
+            <h2 class="text-2xl font-bold text-gray-900">等待好友加入...</h2>
+            
+            <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                <p class="text-xs text-blue-500 uppercase font-bold mb-1">房间号</p>
+                <p id="display-room-id" class="text-4xl font-mono font-black text-blue-600 tracking-widest">---</p>
+            </div>
+            
+            <p class="text-sm text-gray-500">告诉对方输入此号码<br><span class="text-xs text-red-400">*房主请勿关闭此页面</span></p>
+            <button onclick="location.reload()" class="text-red-500 text-sm font-medium mt-4">取消</button>
+        </div>
+    </div>
+
+    <!-- Screen 3: Setup Phase -->
     <div id="screen-setup" class="hidden w-full max-w-md flex-col h-screen py-6">
         <div class="flex-none mb-4 px-4">
-            <h2 id="setup-title" class="text-2xl font-bold text-gray-900">玩家 A 设毒</h2>
-            <p id="setup-subtitle" class="text-gray-500 text-sm mt-1">请选择一首歌作为陷阱 (对方不可见)</p>
+            <div class="flex justify-between items-center mb-1">
+                <h2 class="text-2xl font-bold text-gray-900">选择毒药</h2>
+                <span id="setup-status" class="status-badge bg-yellow-100 text-yellow-700">等待双方准备</span>
+            </div>
+            <p class="text-gray-500 text-sm">点击一首歌设为陷阱，对方不可见</p>
         </div>
 
         <div class="flex-grow overflow-y-auto px-2 pb-24">
@@ -163,74 +131,28 @@
         </div>
 
         <div class="fixed bottom-6 left-0 right-0 px-6 flex justify-center z-20">
-             <button id="confirm-poison-btn" disabled onclick="confirmPoison()" class="w-full max-w-md bg-gray-200 text-gray-400 font-bold py-4 rounded-2xl transition-all duration-300 shadow-md">
-                请选择毒药
+             <button id="confirm-poison-btn" disabled onclick="submitPoison()" class="w-full max-w-md bg-gray-200 text-gray-400 font-bold py-4 rounded-2xl transition-all duration-300 shadow-md">
+                请选择一首歌
             </button>
         </div>
     </div>
 
-    <!-- Screen 2.5: Remote Setup (Display Grid + Input) -->
-    <div id="screen-remote-setup" onclick="openNumberInput()" class="hidden w-full max-w-md flex-col h-screen py-4 bg-[#f5f5f7] cursor-pointer">
-        <div class="flex-none text-center mb-4 px-4 pointer-events-none">
-            <div class="bg-white px-4 py-2 rounded-full shadow-sm border inline-block">
-                <h2 class="text-sm font-bold text-blue-600 flex items-center justify-center gap-2">
-                    <span>📹</span> 请展示给对方看
-                </h2>
-            </div>
-        </div>
-
-        <!-- 4x4 Grid for Camera -->
-        <div class="flex-grow overflow-y-auto px-2 pb-10 pointer-events-none flex items-center">
-            <div id="remote-setup-grid" class="grid-4x4 w-full">
-                <!-- 4x4 Grid items generated by JS -->
-            </div>
-        </div>
-
-        <!-- Hint text at bottom -->
-        <div class="fixed bottom-8 left-0 right-0 text-center pointer-events-none z-0">
-            <p class="text-gray-400 text-sm animate-pulse font-medium">对方报号后 · 点击屏幕任意处录入</p>
-        </div>
-    </div>
-
-    <!-- Modal for Number Input -->
-    <div id="modal-input" class="hidden fixed inset-0 z-50 modal-bg flex items-center justify-center p-6 slide-up">
-        <div class="w-full max-w-sm text-center">
-            <h3 class="text-2xl font-bold text-gray-900 mb-2">对方选了多少号?</h3>
-            <p class="text-sm text-gray-500 mb-8">输入后系统将重新洗牌</p>
-            
-            <div class="grid grid-cols-4 gap-3 mb-8">
-                <!-- Keypad generated by JS -->
-            </div>
-            
-            <button onclick="event.stopPropagation(); closeNumberInput()" class="text-gray-400 font-medium py-3 px-6 rounded-full hover:bg-gray-100 transition-colors">
-                取消 (返回展示)
-            </button>
-        </div>
-    </div>
-
-    <!-- Screen 3: Interstitial (Pass Phone) -->
-    <div id="screen-pass" class="hidden w-full max-w-md text-center slide-up justify-center flex-col h-screen">
-        <div class="bg-white p-8 rounded-3xl shadow-xl border border-gray-100 mx-4">
-            <div class="text-6xl mb-6">📱</div>
-            <h2 class="text-2xl font-bold text-gray-900 mb-2">请传递手机</h2>
-            <p class="text-gray-500 mb-8">交给 <span id="next-player-name" class="text-blue-600 font-bold">玩家 B</span></p>
-            <button onclick="nextPhase()" class="w-full bg-gray-900 text-white font-bold py-4 rounded-xl ios-btn">
-                我是 <span id="next-player-btn-name">玩家 B</span>
-            </button>
-        </div>
-    </div>
-
-    <!-- Screen 4: Gameplay (Battle) -->
+    <!-- Screen 4: Battle Phase -->
     <div id="screen-battle" class="hidden w-full max-w-md flex-col h-screen py-4">
         <!-- Battle Header -->
-        <div class="flex-none mb-4 mx-2 bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex justify-between items-center">
-            <div>
-                <p class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">当前回合</p>
-                <h2 id="current-turn-player" class="text-xl font-bold text-gray-900">玩家 A</h2>
+        <div class="flex-none mb-4 mx-2 bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+            <div class="flex justify-between items-center mb-2">
+                <div>
+                    <p class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">当前状态</p>
+                    <h2 id="battle-status-text" class="text-lg font-bold text-gray-900">对方正在思考...</h2>
+                </div>
+                <div class="text-right">
+                    <p class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">安全区</p>
+                    <p id="safe-count" class="text-xl font-mono text-green-500 font-bold">16</p>
+                </div>
             </div>
-            <div class="text-right">
-                <p class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">安全区</p>
-                <p id="safe-count" class="text-xl font-mono text-green-500 font-bold">16</p>
+            <div class="w-full bg-gray-100 rounded-full h-1.5">
+                <div id="turn-indicator" class="bg-blue-500 h-1.5 rounded-full transition-all duration-500" style="width: 50%"></div>
             </div>
         </div>
 
@@ -240,45 +162,36 @@
                 <!-- Battle items generated by JS -->
             </div>
         </div>
-
-        <div class="flex-none text-center text-xs text-gray-400 pb-4 font-medium">
-            选中对方毒药即淘汰
-        </div>
     </div>
 
     <!-- Screen 5: Game Over -->
-    <div id="screen-result" class="hidden w-full max-w-md text-center slide-up z-50 fixed inset-0 bg-white/90 backdrop-blur-xl flex flex-col justify-center items-center p-6">
+    <div id="screen-result" class="hidden w-full max-w-md text-center slide-up z-50 fixed inset-0 bg-white/95 backdrop-blur-xl flex flex-col justify-center items-center p-6">
         <div class="w-full max-w-sm">
-            <div id="result-icon" class="text-7xl mb-6 animate-bounce">💥</div>
-            <h2 class="text-4xl font-black text-gray-900 mb-2">BOOM!</h2>
-            <p class="text-xl text-gray-500 mb-8">
-                <span id="loser-name" class="text-red-500 font-bold">玩家 A</span> 踩雷了！
-            </p>
+            <div id="result-icon" class="text-7xl mb-6">🏆</div>
+            <h2 id="result-title" class="text-4xl font-black text-gray-900 mb-2">胜利!</h2>
+            <p id="result-desc" class="text-xl text-gray-500 mb-8">对方喝下了毒药</p>
             
             <div class="bg-gray-50 p-6 rounded-2xl mb-8 border border-gray-100">
                 <p class="text-xs text-gray-400 uppercase mb-2 font-bold tracking-widest">致命毒药</p>
-                <p id="poison-song-name" class="text-2xl font-bold text-gray-900">🎵 七里香</p>
+                <p id="result-poison-name" class="text-2xl font-bold text-gray-900">---</p>
             </div>
 
             <div class="mb-10">
                 <div class="inline-block px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-bold mb-3">
                     惩罚时间
                 </div>
-                <div id="punishment-text" class="text-gray-800 text-lg font-medium px-4">
-                    <!-- Random punishment -->
+                <div id="result-punishment" class="text-gray-800 text-lg font-medium px-4">
+                    ---
                 </div>
             </div>
 
-            <button onclick="resetGame()" class="w-full bg-[#0071e3] text-white font-bold py-4 rounded-2xl shadow-lg ios-btn text-lg">
-                再来一局
+            <button onclick="location.reload()" class="w-full bg-gray-900 text-white font-bold py-4 rounded-2xl shadow-lg ios-btn text-lg">
+                返回大厅
             </button>
         </div>
     </div>
 
     <script>
-        // --- Song Library (Approx 300 popular Chinese songs) ---
-        // Generating a large representative list. 
-        // Note: For brevity in code, I will include a very large list here.
         const SONG_LIBRARY = [
             "七里香", "孤勇者", "成都", "演员", "后来", "晴天", "十年", "稻香", "简单爱", "告白气球", "体面", "凉凉", "逆战", "泡沫", "遇见", "小幸运",
             "青花瓷", "本草纲目", "龙卷风", "搁浅", "安静", "听妈妈的话", "千里之外", "菊花台", "夜曲", "彩虹", "发如雪", "甜甜的", "蒲公英的约定", "最长的电影",
@@ -293,394 +206,352 @@
             "Super Star", "波斯猫", "不想长大", "中国话", "Shero", "痛快", "恋人未满", "热带雨林",
             "日不落", "倒带", "布拉格广场", "舞娘", "特务J", "爱情三十六计", "今天你要嫁给我", "说爱你",
             "当你", "爱你", "睫毛弯弯", "第一次爱的人", "那年夏天", "欧若拉", "淋雨一直走",
-            "年少有为", "李白", "模特", "喜剧之王", "不将就", "戒烟", "麻雀", "老街",
-            "画", "赵雷", "理想", "南方姑娘", "少年", "光点", "无羁", "大碗宽面",
-            "芒种", "绿色", "你的酒馆对我打了烊", "来自天堂的魔鬼", "多远都要在一起", "再见", "光年之外",
-            "天黑黑", "开始懂了", "遇见", "绿光", "逆光", "我怀念的", "雨天",
-            "盛夏的果实", "阴天", "广岛之恋", "电台情歌", "如果没有你", "忽然之间",
-            "K歌之王", "富士山下", "浮夸", "单车", "一丝不挂", "好久不见", "淘汰", "红玫瑰",
-            "洋葱", "知足", "温柔", "倔强", "突然好想你", "离开地球表面", "恋爱ing", "私奔到月球", "星空",
-            "这就是爱", "逆战", "天下", "明天过后", "看月亮爬上来", "勿忘心安",
-            "如果这都不算爱", "王妃", "新不了情", "没那么简单", "王妃", "背叛", "无所谓",
-            "认错", "外滩十八号", "该死的温柔", "求佛", "老鼠爱大米", "两只蝴蝶", "月亮之上", "最炫民族风", "荷塘月色",
-            "那些年", "小情歌", "无与伦比的美丽", "我好想你", "起风了", "少年", "热爱105°C的你",
-            "秒针", "漠河舞厅", "孤勇者", "萱草花", "这世界那么多人", "如愿", "人世间", "早安隆回", "乌梅子酱",
-            "勇气", "第一次", "童话", "约定", "后来", "成全", "爱的代价", "当爱已成往事",
-            "真心英雄", "朋友", "花心", "刀剑如梦", "沧海一声笑", "难念的经", "铁血丹心", "世间始终你好",
-            "千千阙歌", "飘雪", "红日", "月半小夜曲", "护花使者", "处处吻", "野孩子", "少女的祈祷",
-            "下一站天后", "死性不改", "恋爱大过天", "眼红红", "好心分手", "大哥",
-            "至少还有你", "爱如潮水", "过火", "信仰", "爱就一个字", "白月光",
-            "水手", "星星点灯", "大约在冬季", "外面的世界", "再回首", "跟往事干杯",
-            "心太软", "伤心太平洋", "任逍遥", "对面的女孩看过来", "浪花一朵朵", "春天花会开",
-            "无地自容", "一无所有", "花房姑娘", "新长征路上的摇滚", "假行僧",
-            "挪威的森林", "突然的自我", "浪人情歌", "Last Dance", "痛哭的人",
-            "单身情歌", "蒙娜丽莎的眼泪", "离歌", "死了都要爱", "天高地厚",
-            "痴心绝对", "手放开", "一万个理由", "有没有人告诉你", "有没有那么一首歌",
-            "贝加尔湖畔", "父亲", "当你老了", "时间都去哪儿了", "常回家看看",
-            "好运来", "恭喜发财", "难忘今宵", "我和我的祖国", "歌唱祖国"
+            "年少有为", "李白", "模特", "喜剧之王", "不将就", "戒烟", "麻雀", "老街"
         ];
-
+        
         const PUNISHMENTS = [
-            "深情演唱这首歌的副歌 (30秒)",
-            "模仿原唱的经典动作拍照",
-            "真心话：说出你现在的屏保是谁",
-            "用方言朗读这首歌的歌词",
-            "发个红包给赢家 (金额随意)",
-            "做5个深蹲并一边唱这首歌",
-            "让赢家在你的脸上画一个小图案",
-            "大喊三声：我是麦霸！",
-            "展示你相册里最新的那张照片",
-            "保持这个姿势直到下一轮开始"
+            "深情演唱这首歌的副歌 (30秒)", "模仿原唱的经典动作拍照", "真心话：说出你现在的屏保是谁", "用方言朗读这首歌的歌词",
+            "发个红包给赢家 (金额随意)", "做5个深蹲并一边唱这首歌", "让赢家在你的脸上画一个小图案", "大喊三声：我是麦霸！"
         ];
 
-        // --- State Management ---
+        // --- P2P Global State ---
+        let peer = null;
+        let conn = null;
+        let myRole = null; // 'host' or 'guest'
+        let localPoisonSelection = null;
+        
+        // The Host maintains the 'True' game state
         let gameState = {
-            mode: 'local', 
-            step: 0, 
-            currentGameSongs: [], // The 16 songs for this session
-            currentList: [], // The shuffled list for display
-            p1PoisonName: null, 
-            p2PoisonName: null,
-            currentTurn: 1, 
-            sungSongs: [], 
-            tempSelectionName: null 
+            status: 'waiting',
+            songs: [],
+            p1Poison: null, // Host Poison
+            p2Poison: null, // Guest Poison
+            sungSongs: [],
+            currentTurn: 'host', // 'host' or 'guest'
+            winner: null,
+            punishment: ''
         };
 
-        // --- DOM Elements ---
-        const screens = {
-            home: document.getElementById('screen-home'),
-            setup: document.getElementById('screen-setup'),
-            remoteSetup: document.getElementById('screen-remote-setup'),
-            pass: document.getElementById('screen-pass'),
-            battle: document.getElementById('screen-battle'),
-            result: document.getElementById('screen-result')
-        };
+        // --- UI Functions ---
+        function showScreen(name) {
+            ['lobby', 'waiting', 'setup', 'battle', 'result'].forEach(id => {
+                document.getElementById(`screen-${id}`).classList.add('hidden');
+            });
+            document.getElementById(`screen-${name}`).classList.remove('hidden');
+        }
 
-        // --- Utils ---
         function shuffle(array) {
-            let currentIndex = array.length,  randomIndex;
+            let currentIndex = array.length, randomIndex;
             while (currentIndex != 0) {
                 randomIndex = Math.floor(Math.random() * currentIndex);
                 currentIndex--;
-                [array[currentIndex], array[randomIndex]] = [
-                array[randomIndex], array[currentIndex]];
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
             }
             return array;
         }
 
-        // Pick n random unique elements from array
-        function getRandomSongs(allSongs, count) {
-            const shuffled = shuffle([...allSongs]); // Copy before shuffle
-            return shuffled.slice(0, count);
+        function log(msg) {
+            console.log(msg);
+            document.getElementById('connection-status').innerText = msg;
         }
 
-        // --- Functions ---
+        // --- P2P Logic ---
 
-        function selectMode(mode) {
-            gameState.mode = mode;
-            document.getElementById('mode-local').classList.remove('selected');
-            document.getElementById('mode-remote').classList.remove('selected');
+        function createRoom() {
+            // Generate a random 6-digit room ID
+            const roomId = Math.floor(Math.random() * 900000 + 100000).toString();
+            // Prefix to avoid collision with other apps using public PeerJS server
+            const peerId = 'witch_game_' + roomId; 
+
+            log("正在连接服务器...");
             
-            document.getElementById(`mode-${mode}`).classList.add('selected');
-        }
+            peer = new Peer(peerId);
 
-        function showScreen(screenName) {
-            Object.values(screens).forEach(el => el.classList.add('hidden'));
-            screens[screenName].classList.remove('hidden');
-        }
+            peer.on('open', (id) => {
+                log("创建成功！");
+                myRole = 'host';
+                document.getElementById('display-room-id').innerText = roomId;
+                showScreen('waiting');
 
-        function startGame() {
-            gameState.step = 1;
-            gameState.p1PoisonName = null;
-            gameState.p2PoisonName = null;
-            gameState.sungSongs = [];
-            gameState.currentTurn = 1;
-            
-            // 1. Pick 16 Random Songs from the Big Library
-            gameState.currentGameSongs = getRandomSongs(SONG_LIBRARY, 16);
-            
-            // 2. Initial Shuffle for P1 Setup
-            gameState.currentList = shuffle([...gameState.currentGameSongs]);
-            
-            setupPhase(1);
-        }
-
-        function resetGame() {
-            showScreen('home');
-        }
-
-        // Setup Phase Logic (P1 or Local P2)
-        function setupPhase(playerNum) {
-            gameState.tempSelectionName = null;
-            
-            let title = `玩家 ${playerNum === 1 ? 'A' : 'B'} 设毒`;
-            let sub = "请选择一首歌作为陷阱";
-            if (gameState.mode === 'remote' && playerNum === 1) {
-                title = "步骤 1: 我 (玩家A) 设毒";
-                sub = "先为自己选定一个毒药，对方不可见";
-            }
-            
-            document.getElementById('setup-title').innerText = title;
-            document.getElementById('setup-subtitle').innerText = sub;
-
-            const confirmBtn = document.getElementById('confirm-poison-btn');
-            confirmBtn.disabled = true;
-            confirmBtn.innerText = "请选择毒药";
-            confirmBtn.className = "w-full max-w-md bg-gray-200 text-gray-400 font-bold py-4 rounded-2xl transition-all duration-300 shadow-none";
-
-            const grid = document.getElementById('setup-grid');
-            grid.innerHTML = '';
-
-            gameState.currentList.forEach((song, index) => {
-                const btn = document.createElement('button');
-                btn.className = "bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-gray-800 font-medium h-16 flex items-center justify-between transition-all active:scale-95";
-                btn.onclick = () => selectTempPoison(song, btn);
-                btn.innerHTML = `
-                    <span class="truncate text-sm">${song}</span>
-                    <span class="text-xl opacity-30">🎵</span>
-                `;
-                grid.appendChild(btn);
+                // Init Game State
+                gameState.songs = shuffle([...SONG_LIBRARY]).slice(0, 16);
+                gameState.songs = shuffle(gameState.songs);
+                gameState.punishment = PUNISHMENTS[Math.floor(Math.random() * PUNISHMENTS.length)];
             });
 
-            showScreen('setup');
-        }
+            peer.on('connection', (connection) => {
+                conn = connection;
+                setupConnection();
+                // Move to setup
+                gameState.status = 'setup';
+                syncState();
+            });
 
-        function selectTempPoison(songName, btnElement) {
-            // Reset Styles
-            const allBtns = document.getElementById('setup-grid').children;
-            for (let b of allBtns) {
-                b.className = "bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-gray-800 font-medium h-16 flex items-center justify-between transition-all active:scale-95";
-                b.querySelector('span:last-child').innerHTML = '🎵';
-                b.querySelector('span:last-child').className = "text-xl opacity-30";
-            }
-
-            // Active Style (Apple Style Selection)
-            btnElement.className = "bg-blue-50 p-4 rounded-xl shadow-inner border-2 border-blue-500 text-blue-800 font-bold h-16 flex items-center justify-between transform scale-[0.98]";
-            btnElement.querySelector('span:last-child').innerHTML = '☠️';
-            btnElement.querySelector('span:last-child').className = "text-xl";
-
-            gameState.tempSelectionName = songName;
-            
-            const confirmBtn = document.getElementById('confirm-poison-btn');
-            confirmBtn.disabled = false;
-            confirmBtn.innerText = "确认下毒";
-            confirmBtn.className = "w-full max-w-md bg-[#0071e3] hover:bg-[#0077ED] text-white font-bold py-4 rounded-2xl transition-all duration-300 shadow-lg";
-        }
-
-        function confirmPoison() {
-            if (gameState.step === 1) {
-                // P1 finished
-                gameState.p1PoisonName = gameState.tempSelectionName;
-                
-                if (gameState.mode === 'remote') {
-                    startRemoteSetup();
+            peer.on('error', (err) => {
+                if(err.type === 'unavailable-id') {
+                    alert("房间号生成冲突，请重试");
+                    location.reload();
                 } else {
-                    gameState.step = 2;
-                    gameState.currentList = shuffle([...gameState.currentGameSongs]); 
-                    showPassScreen(2);
+                    alert("连接错误: " + err.type);
                 }
-
-            } else if (gameState.step === 3) {
-                // P2 finished (Local)
-                gameState.p2PoisonName = gameState.tempSelectionName;
-                gameState.step = 4;
-                gameState.currentList = shuffle([...gameState.currentGameSongs]);
-                showPassScreen(1, true); 
-            }
+            });
         }
 
-        // --- Remote Setup Logic ---
-        function startRemoteSetup() {
-            // 1. Shuffle again before showing remote grid
-            gameState.currentList = shuffle([...gameState.currentGameSongs]);
-            
-            const grid = document.getElementById('remote-setup-grid');
-            grid.innerHTML = '';
+        function joinRoom() {
+            const input = document.getElementById('room-code-input');
+            const roomId = input.value.trim();
+            if (roomId.length !== 6) { alert("请输入6位房间号"); return; }
 
-            gameState.currentList.forEach((song, index) => {
-                const cell = document.createElement('div');
-                cell.className = "big-grid-cell";
+            const peerId = 'witch_game_' + roomId;
+            log("正在查找房间...");
+
+            peer = new Peer(); // Guest gets random ID
+
+            peer.on('open', () => {
+                conn = peer.connect(peerId);
+                if(!conn) { alert("无法连接"); return; }
                 
-                // 4x4 Grid - Huge Numbers, Clear Text
-                cell.innerHTML = `
-                    <div class="number-tag">${index + 1}</div>
-                    <div class="song-name-tag remote-song-name">${song}</div>
-                `;
-                grid.appendChild(cell);
+                myRole = 'guest';
+                setupConnection();
             });
 
-            // Prepare Modal Keypad (1-16)
-            const modalGrid = document.querySelector('#modal-input .grid');
-            modalGrid.innerHTML = '';
-            for(let i=1; i<=16; i++) {
-                const b = document.createElement('button');
-                b.innerText = i;
-                b.className = "aspect-square bg-gray-100 hover:bg-blue-100 text-blue-600 font-bold text-xl rounded-2xl transition-colors shadow-sm";
-                b.onclick = (e) => {
-                    e.stopPropagation();
-                    handleRemoteInput(i);
-                };
-                modalGrid.appendChild(b);
+            peer.on('error', (err) => {
+                alert("无法连接到房间，可能房间号错误或房主已离线");
+            });
+        }
+
+        function setupConnection() {
+            conn.on('open', () => {
+                log("已连接！");
+            });
+
+            conn.on('data', (data) => {
+                // If I am Guest, I receive State from Host
+                if (myRole === 'guest' && data.type === 'SYNC') {
+                    gameState = data.state;
+                    renderGame();
+                }
+                // If I am Host, I receive Actions from Guest
+                if (myRole === 'host' && data.type === 'ACTION') {
+                    handleGuestAction(data.payload);
+                }
+            });
+
+            conn.on('close', () => {
+                alert("对方已断开连接");
+                location.reload();
+            });
+        }
+
+        // Only Host calls this to push state to Guest
+        function syncState() {
+            renderGame(); // Render local
+            if (conn && conn.open) {
+                conn.send({ type: 'SYNC', state: gameState });
             }
-
-            showScreen('remoteSetup');
         }
 
-        function openNumberInput() {
-            // Hide song names immediately
-            const songNames = document.querySelectorAll('.remote-song-name');
-            songNames.forEach(el => el.style.opacity = '0');
+        // --- Game Logic (Host controls everything) ---
 
-            document.getElementById('modal-input').classList.remove('hidden');
+        function handleGuestAction(payload) {
+            if (payload.action === 'SET_POISON') {
+                gameState.p2Poison = payload.index;
+                checkSetupComplete();
+            }
+            if (payload.action === 'CLICK_SONG') {
+                processTurn(payload.index);
+            }
+            syncState();
         }
 
-        function closeNumberInput() {
-            // Show song names if cancelled
-            const songNames = document.querySelectorAll('.remote-song-name');
-            songNames.forEach(el => el.style.opacity = '1');
+        // Local actions (Host or Guest UI triggers this)
+        function submitPoison() {
+            if (localPoisonSelection === null) return;
 
-            document.getElementById('modal-input').classList.add('hidden');
-        }
-
-        function handleRemoteInput(number) {
-            document.getElementById('modal-input').classList.add('hidden');
-            
-            const index = number - 1;
-            const selectedSong = gameState.currentList[index];
-            gameState.p2PoisonName = selectedSong;
-            
-            // Shuffle again for Battle
-            gameState.currentList = shuffle([...gameState.currentGameSongs]);
-            
-            // Apple style alert/confirm isn't possible natively without library, using alert for simplicity
-            // or we could build a custom modal. For now, alert is safe.
-            alert(`✅ 设置成功！\nTA 选择了 ${number} 号\n\n系统将再次打乱顺序开始对战...`);
-            
-            startBattle();
-        }
-
-        function showPassScreen(nextPlayerNum, isReadyToBattle = false) {
-            const playerLabel = nextPlayerNum === 1 ? 'A' : 'B';
-            document.getElementById('next-player-name').innerText = `玩家 ${playerLabel}`;
-            document.getElementById('next-player-btn-name').innerText = `玩家 ${playerLabel}`;
-            
-            const btn = document.querySelector('#screen-pass button');
-            if(isReadyToBattle) {
-                btn.onclick = startBattle;
-                btn.innerText = `我是 玩家 A，开始对决`;
-                btn.className = "w-full bg-[#0071e3] text-white font-bold py-4 rounded-xl ios-btn";
+            if (myRole === 'host') {
+                gameState.p1Poison = localPoisonSelection;
+                checkSetupComplete();
+                syncState();
             } else {
-                btn.onclick = () => {
-                    gameState.step = 3;
-                    setupPhase(2);
-                };
-                btn.className = "w-full bg-gray-900 text-white font-bold py-4 rounded-xl ios-btn";
+                // Send choice to host
+                conn.send({ type: 'ACTION', payload: { action: 'SET_POISON', index: localPoisonSelection } });
+                // We optimistically disable button locally in render
+                // But actual state update waits for sync
             }
-            showScreen('pass');
-        }
-
-        // Battle Phase Logic
-        function startBattle() {
-            gameState.step = 5;
-            gameState.currentTurn = 1;
-            gameState.sungSongs = [];
-            renderBattleGrid();
-            updateTurnHeader();
-            showScreen('battle');
-        }
-
-        function updateTurnHeader() {
-            const p = gameState.currentTurn === 1 ? 'A' : 'B';
-            const colorClass = gameState.currentTurn === 1 ? 'text-blue-600' : 'text-green-600';
             
-            let playerText = `玩家 ${p}`;
-            if (gameState.mode === 'remote') {
-                 playerText = gameState.currentTurn === 1 ? '玩家 A (我)' : '玩家 B (连线)';
+            // Disable button visually immediately
+            document.getElementById('confirm-poison-btn').innerText = "等待对方...";
+            document.getElementById('confirm-poison-btn').disabled = true;
+        }
+
+        function checkSetupComplete() {
+            if (gameState.p1Poison !== null && gameState.p2Poison !== null) {
+                gameState.status = 'battle';
             }
-
-            const el = document.getElementById('current-turn-player');
-            el.innerText = playerText;
-            el.className = `text-xl font-bold transition-all duration-300 ${colorClass}`;
-            
-            document.getElementById('safe-count').innerText = 16 - gameState.sungSongs.length;
         }
 
-        function renderBattleGrid() {
-            const grid = document.getElementById('battle-grid');
-            grid.innerHTML = '';
-
-            gameState.currentList.forEach((song, index) => {
-                const isSung = gameState.sungSongs.includes(song);
-                const btn = document.createElement('button');
-                
-                // Apple Style Battle Cards
-                let classes = "h-20 p-2 rounded-xl text-sm relative transition-all duration-300 flex flex-col items-center justify-center font-bold shadow-sm ";
-                
-                if (isSung) {
-                    // Reveal state
-                    classes += "bg-gray-100 border border-gray-200 text-gray-400 opacity-60 cursor-not-allowed";
-                    btn.disabled = true;
-                    btn.innerHTML = `<span class="line-through">${song}</span>`;
-                } else {
-                    // Active state
-                    classes += "bg-white border border-gray-100 text-gray-800 hover:shadow-md active:scale-95 active:bg-gray-50";
-                    btn.onclick = () => handleSongClick(song, index);
-                    btn.innerHTML = `
-                        <span class="z-10">${song}</span>
-                        <div class="absolute bottom-1 right-2 text-gray-200 text-xs">🎤</div>
-                    `;
-                }
-
-                btn.className = classes;
-                grid.appendChild(btn);
-            });
+        function handleBattleClick(index) {
+            if (myRole === 'host') {
+                processTurn(index);
+                syncState();
+            } else {
+                conn.send({ type: 'ACTION', payload: { action: 'CLICK_SONG', index: index } });
+            }
         }
 
-        function handleSongClick(songName, index) {
-            const currentPlayer = gameState.currentTurn;
-            const opponentPoison = currentPlayer === 1 ? gameState.p2PoisonName : gameState.p1PoisonName;
+        function processTurn(index) {
+            // Core Logic (Run on Host)
+            if (gameState.sungSongs.includes(index)) return;
 
-            if (songName === opponentPoison) {
-                // LOST!
-                triggerGameOver(currentPlayer, songName);
+            const currentActor = gameState.currentTurn; // 'host' or 'guest'
+            const opponentPoison = currentActor === 'host' ? gameState.p2Poison : gameState.p1Poison;
+            const myPoison = currentActor === 'host' ? gameState.p1Poison : gameState.p2Poison;
+
+            if (index === opponentPoison) {
+                // Stepped on poison -> Current actor loses
+                gameState.status = 'gameover';
+                gameState.winner = currentActor === 'host' ? 'guest' : 'host';
+                gameState.sungSongs.push(index);
             } else {
                 // Safe
-                gameState.sungSongs.push(songName);
+                gameState.sungSongs.push(index);
+                gameState.currentTurn = currentActor === 'host' ? 'guest' : 'host';
+            }
+        }
+
+
+        // --- Render Logic ---
+
+        function renderGame() {
+            if (gameState.status === 'setup') {
+                showScreen('setup');
+                renderSetup();
+            } else if (gameState.status === 'battle') {
+                showScreen('battle');
+                renderBattle();
+            } else if (gameState.status === 'gameover') {
+                showScreen('result');
+                renderResult();
+            }
+        }
+
+        function renderSetup() {
+            const isMeReady = myRole === 'host' ? gameState.p1Poison !== null : gameState.p2Poison !== null;
+            const isOpponentReady = myRole === 'host' ? gameState.p2Poison !== null : gameState.p1Poison !== null;
+
+            const statusBadge = document.getElementById('setup-status');
+            if (isMeReady && !isOpponentReady) {
+                statusBadge.innerText = "等待对方...";
+                statusBadge.className = "status-badge bg-blue-100 text-blue-700 animate-pulse";
+            } else if (!isMeReady) {
+                statusBadge.innerText = "请选择";
+                statusBadge.className = "status-badge bg-yellow-100 text-yellow-700";
+            }
+
+            const grid = document.getElementById('setup-grid');
+            // Init grid if empty
+            if (grid.children.length === 0) {
+                gameState.songs.forEach((song, index) => {
+                    const btn = document.createElement('button');
+                    btn.className = "bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-gray-800 font-medium h-16 flex items-center justify-between transition-all active:scale-95";
+                    btn.onclick = () => {
+                        localPoisonSelection = index;
+                        // Reset all
+                        Array.from(grid.children).forEach(b => {
+                            b.className = "bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-gray-800 font-medium h-16 flex items-center justify-between transition-all active:scale-95";
+                            b.querySelector('span:last-child').innerHTML = '🎵';
+                            b.querySelector('span:last-child').className = "text-xl opacity-30";
+                        });
+                        // Highlight
+                        btn.className = "bg-blue-50 p-4 rounded-xl shadow-inner border-2 border-blue-500 text-blue-800 font-bold h-16 flex items-center justify-between transform scale-[0.98]";
+                        btn.querySelector('span:last-child').innerHTML = '☠️';
+                        btn.querySelector('span:last-child').className = "text-xl";
+
+                        const cBtn = document.getElementById('confirm-poison-btn');
+                        cBtn.disabled = false;
+                        cBtn.className = "w-full max-w-md bg-[#0071e3] hover:bg-[#0077ED] text-white font-bold py-4 rounded-2xl transition-all duration-300 shadow-lg";
+                        cBtn.innerText = "确认下毒";
+                    };
+                    btn.innerHTML = `<span class="truncate text-sm">${song}</span><span class="text-xl opacity-30">🎵</span>`;
+                    grid.appendChild(btn);
+                });
+            }
+
+            if (isMeReady) {
+                 const cBtn = document.getElementById('confirm-poison-btn');
+                 cBtn.innerText = "已确认，等待对方...";
+                 cBtn.disabled = true;
+                 cBtn.className = "w-full max-w-md bg-green-500 text-white font-bold py-4 rounded-2xl shadow-md";
+            }
+        }
+
+        function renderBattle() {
+            const isMyTurn = gameState.currentTurn === myRole;
+            const statusText = document.getElementById('battle-status-text');
+            const turnIndicator = document.getElementById('turn-indicator');
+            const safeCount = document.getElementById('safe-count');
+
+            if (isMyTurn) {
+                statusText.innerText = "轮到你了！请点歌";
+                statusText.className = "text-lg font-bold text-[#0071e3] animate-pulse";
+                turnIndicator.className = "bg-[#0071e3] h-1.5 rounded-full transition-all duration-500";
+            } else {
+                statusText.innerText = "对方正在思考...";
+                statusText.className = "text-lg font-bold text-gray-500";
+                turnIndicator.className = "bg-gray-300 h-1.5 rounded-full transition-all duration-500";
+            }
+            safeCount.innerText = 16 - gameState.sungSongs.length;
+
+            const grid = document.getElementById('battle-grid');
+            grid.innerHTML = '';
+            gameState.songs.forEach((song, index) => {
+                const isSung = gameState.sungSongs.includes(index);
+                const btn = document.createElement('button');
                 
-                const btns = document.getElementById('battle-grid').children;
-                btns[index].className = "h-20 p-2 rounded-xl border border-green-200 bg-green-50 text-green-600 font-bold flex items-center justify-center animate-pulse";
-                btns[index].innerHTML = "<span>安全 ✅</span>";
-
-                setTimeout(() => {
-                    if (gameState.sungSongs.length === 16) {
-                        alert("平局！完美闪避！");
-                        resetGame();
-                        return;
-                    }
-                    gameState.currentTurn = currentPlayer === 1 ? 2 : 1;
-                    renderBattleGrid();
-                    updateTurnHeader();
-                }, 500);
-            }
+                if (isSung) {
+                     btn.className = "h-20 p-2 rounded-xl text-sm relative flex flex-col items-center justify-center font-bold shadow-sm bg-gray-100 border border-gray-200 text-gray-400 opacity-60 cursor-not-allowed";
+                     btn.disabled = true;
+                     btn.innerHTML = `<span class="line-through">${song}</span>`;
+                } else {
+                     if (isMyTurn) {
+                        btn.className = "h-20 p-2 rounded-xl text-sm relative transition-all duration-300 flex flex-col items-center justify-center font-bold shadow-sm bg-white border border-gray-100 text-gray-800 hover:shadow-md active:scale-95 active:bg-gray-50";
+                        btn.onclick = () => handleBattleClick(index);
+                     } else {
+                        btn.className = "h-20 p-2 rounded-xl text-sm relative flex flex-col items-center justify-center font-bold shadow-sm bg-white border border-gray-100 text-gray-800 opacity-80 cursor-wait";
+                        btn.disabled = true;
+                     }
+                     btn.innerHTML = `<span class="z-10">${song}</span><div class="absolute bottom-1 right-2 text-gray-200 text-xs">🎤</div>`;
+                }
+                grid.appendChild(btn);
+            });
         }
 
-        function triggerGameOver(loserNum, poisonName) {
-            let loserName = loserNum === 1 ? '玩家 A' : '玩家 B';
-            if (gameState.mode === 'remote') {
-                 loserName = loserNum === 1 ? '玩家 A (我)' : '玩家 B (连线)';
+        function renderResult() {
+            const isWinner = gameState.winner === myRole;
+            const poisonIndex = gameState.winner === 'host' ? gameState.p2Poison : gameState.p1Poison;
+            // The poison that killed the loser is the WINNER'S poison.
+            // Eg. Host wins -> Guest lost -> Guest clicked Host's poison.
+            const fatalIndex = gameState.winner === 'host' ? gameState.p1Poison : gameState.p2Poison;
+
+            document.getElementById('result-poison-name').innerText = `🎵 ${gameState.songs[fatalIndex]}`;
+            document.getElementById('result-punishment').innerText = gameState.punishment;
+
+            const icon = document.getElementById('result-icon');
+            const title = document.getElementById('result-title');
+            const desc = document.getElementById('result-desc');
+
+            if (isWinner) {
+                icon.innerText = "🏆";
+                title.innerText = "胜利!";
+                title.className = "text-4xl font-black text-[#0071e3] mb-2";
+                desc.innerText = "对方喝下了你设的毒药";
+            } else {
+                icon.innerText = "💥";
+                title.innerText = "失败!";
+                title.className = "text-4xl font-black text-red-500 mb-2";
+                desc.innerText = "你喝下了对方的毒药...";
             }
-            
-            const punishment = PUNISHMENTS[Math.floor(Math.random() * PUNISHMENTS.length)];
-
-            document.getElementById('loser-name').innerText = loserName;
-            document.getElementById('poison-song-name').innerText = `🎵 ${poisonName}`;
-            document.getElementById('punishment-text').innerText = punishment;
-
-            showScreen('result');
         }
-
-        // Initialize mode on load
-        selectMode('local');
     </script>
 </body>
 </html>
