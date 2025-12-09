@@ -5,10 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>女巫的毒药 - 多主题版</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    
     <!-- PeerJS (国内 BootCDN 加速) -->
     <script src="https://cdn.bootcdn.net/ajax/libs/peerjs/1.5.2/peerjs.min.js"></script>
-
+    
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
@@ -128,99 +127,159 @@
         .theme-sports { background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); }
         .theme-movie { background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); }
         .theme-tech { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        
+        /* Responsive adjustments */
+        @media (max-width: 640px) {
+            .grid-cols-2 {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+        
+        @media (min-width: 641px) {
+            .grid-cols-2 {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+        
+        /* Poison marker styles */
+        .poison-marker {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+            z-index: 10;
+        }
+        
+        .my-poison {
+            background-color: #ef4444;
+        }
+        
+        .opponent-poison {
+            background-color: #8b5cf6;
+        }
+        
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 9999px;
+            font-size: 14px;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .toast.show {
+            opacity: 1;
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-4">
 
     <!-- Emote Overlay Container -->
     <div id="emote-container"></div>
+    
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
 
-    <!-- Screen 1: Category Selection -->
-    <div id="screen-category" class="w-full max-w-md space-y-6 slide-up text-center">
+    <!-- Screen 1: Connect Room -->
+    <div id="screen-connect" class="w-full max-w-md space-y-6 slide-up text-center">
         <div class="pt-8 pb-4">
             <h1 class="text-4xl font-extrabold tracking-tight text-white mb-2">女巫的毒药</h1>
-            <p class="text-white/80 text-sm font-medium tracking-wide">选择一个主题开始游戏</p>
+            <p class="text-white/80 text-sm font-medium tracking-wide">创建或加入房间开始游戏</p>
         </div>
 
-        <div class="grid grid-cols-2 gap-4 px-2">
-            <div onclick="selectCategory('music')" class="category-card ios-card p-6 text-center" data-category="music">
-                <div class="text-4xl mb-2">🎵</div>
-                <h3 class="font-bold text-gray-800">流行音乐</h3>
-                <p class="text-xs text-gray-500 mt-1">经典华语歌曲</p>
-            </div>
+        <div class="ios-card p-6 space-y-4">
+            <button onclick="createRoom()" class="w-full bg-[#0071e3] hover:bg-[#0077ED] text-white font-semibold py-5 px-8 rounded-2xl shadow-lg ios-btn flex items-center justify-center gap-3">
+                <span>🏠</span> 创建房间 (我是房主)
+            </button>
             
-            <div onclick="selectCategory('food')" class="category-card ios-card p-6 text-center" data-category="food">
-                <div class="text-4xl mb-2">🍜</div>
-                <h3 class="font-bold text-gray-800">美食天地</h3>
-                <p class="text-xs text-gray-500 mt-1">中外美食料理</p>
+            <div class="relative">
+                <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-gray-300"></div>
+                </div>
+                <div class="relative flex justify-center text-sm">
+                    <span class="px-2 bg-white text-gray-500">或者</span>
+                </div>
             </div>
-            
-            <div onclick="selectCategory('city')" class="category-card ios-card p-6 text-center" data-category="city">
-                <div class="text-4xl mb-2">🏙️</div>
-                <h3 class="font-bold text-gray-800">世界城市</h3>
-                <p class="text-xs text-gray-500 mt-1">知名城市地标</p>
-            </div>
-            
-            <div onclick="selectCategory('sports')" class="category-card ios-card p-6 text-center" data-category="sports">
-                <div class="text-4xl mb-2">⚽</div>
-                <h3 class="font-bold text-gray-800">体育运动</h3>
-                <p class="text-xs text-gray-500 mt-1">热门运动项目</p>
-            </div>
-            
-            <div onclick="selectCategory('movie')" class="category-card ios-card p-6 text-center" data-category="movie">
-                <div class="text-4xl mb-2">🎬</div>
-                <h3 class="font-bold text-gray-800">影视作品</h3>
-                <p class="text-xs text-gray-500 mt-1">经典电影剧集</p>
-            </div>
-            
-            <div onclick="selectCategory('tech')" class="category-card ios-card p-6 text-center" data-category="tech">
-                <div class="text-4xl mb-2">💻</div>
-                <h3 class="font-bold text-gray-800">科技数码</h3>
-                <p class="text-xs text-gray-500 mt-1">科技产品品牌</p>
+
+            <div class="flex gap-2">
+                <input id="room-code-input" type="number" placeholder="输入房主给的房间号" class="flex-1 p-4 rounded-2xl border border-gray-300 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 font-mono text-center text-lg">
+                <button onclick="joinRoom()" class="bg-gray-900 text-white font-semibold px-6 rounded-2xl ios-btn">
+                    加入
+                </button>
             </div>
         </div>
+
+        <div id="connection-status" class="text-xs text-white/70 mt-4 h-4"></div>
     </div>
 
-    <!-- Screen 2: Lobby -->
-    <div id="screen-lobby" class="hidden w-full max-w-md space-y-6 slide-up text-center">
+    <!-- Screen 2: Category Selection -->
+    <div id="screen-category" class="hidden w-full max-w-md space-y-6 slide-up text-center">
         <div class="ios-card p-6">
             <div class="flex items-center justify-between mb-4">
-                <button onclick="backToCategory()" class="text-gray-400 hover:text-gray-600">
+                <button onclick="disconnectRoom()" class="text-gray-400 hover:text-gray-600">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                     </svg>
                 </button>
                 <div class="text-center">
-                    <div id="selected-category-icon" class="text-3xl mb-1">🎵</div>
-                    <h2 id="selected-category-name" class="text-lg font-bold text-gray-800">流行音乐</h2>
+                    <h2 class="text-lg font-bold text-gray-800">选择主题</h2>
                 </div>
                 <div class="w-6"></div>
             </div>
             
-            <div class="space-y-4">
-                <button onclick="createRoom()" class="w-full bg-[#0071e3] hover:bg-[#0077ED] text-white font-semibold py-5 px-8 rounded-2xl shadow-lg ios-btn flex items-center justify-center gap-3">
-                    <span>🏠</span> 创建房间 (我是房主)
-                </button>
-                
-                <div class="relative">
-                    <div class="absolute inset-0 flex items-center">
-                        <div class="w-full border-t border-gray-300"></div>
-                    </div>
-                    <div class="relative flex justify-center text-sm">
-                        <span class="px-2 bg-white text-gray-500">或者</span>
-                    </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div onclick="selectCategory('music')" class="category-card ios-card p-6 text-center" data-category="music">
+                    <div class="text-4xl mb-2">🎵</div>
+                    <h3 class="font-bold text-gray-800">流行音乐</h3>
+                    <p class="text-xs text-gray-500 mt-1">经典华语歌曲</p>
                 </div>
-
-                <div class="flex gap-2">
-                    <input id="room-code-input" type="number" placeholder="输入房主给的房间号" class="flex-1 p-4 rounded-2xl border border-gray-300 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 font-mono text-center text-lg">
-                    <button onclick="joinRoom()" class="bg-gray-900 text-white font-semibold px-6 rounded-2xl ios-btn">
-                        加入
-                    </button>
+                
+                <div onclick="selectCategory('food')" class="category-card ios-card p-6 text-center" data-category="food">
+                    <div class="text-4xl mb-2">🍜</div>
+                    <h3 class="font-bold text-gray-800">美食天地</h3>
+                    <p class="text-xs text-gray-500 mt-1">中外美食料理</p>
+                </div>
+                
+                <div onclick="selectCategory('city')" class="category-card ios-card p-6 text-center" data-category="city">
+                    <div class="text-4xl mb-2">🏙️</div>
+                    <h3 class="font-bold text-gray-800">世界城市</h3>
+                    <p class="text-xs text-gray-500 mt-1">知名城市地标</p>
+                </div>
+                
+                <div onclick="selectCategory('sports')" class="category-card ios-card p-6 text-center" data-category="sports">
+                    <div class="text-4xl mb-2">⚽</div>
+                    <h3 class="font-bold text-gray-800">体育运动</h3>
+                    <p class="text-xs text-gray-500 mt-1">热门运动项目</p>
+                </div>
+                
+                <div onclick="selectCategory('movie')" class="category-card ios-card p-6 text-center" data-category="movie">
+                    <div class="text-4xl mb-2">🎬</div>
+                    <h3 class="font-bold text-gray-800">影视作品</h3>
+                    <p class="text-xs text-gray-500 mt-1">经典电影剧集</p>
+                </div>
+                
+                <div onclick="selectCategory('tech')" class="category-card ios-card p-6 text-center" data-category="tech">
+                    <div class="text-4xl mb-2">💻</div>
+                    <h3 class="font-bold text-gray-800">科技数码</h3>
+                    <p class="text-xs text-gray-500 mt-1">科技产品品牌</p>
                 </div>
             </div>
         </div>
-
-        <div id="connection-status" class="text-xs text-white/70 mt-4 h-4"></div>
     </div>
 
     <!-- Screen 3: Waiting Room -->
@@ -301,7 +360,6 @@
 
     <!-- Screen 6: Game Over / Review -->
     <div id="screen-result" class="hidden w-full max-w-md text-center slide-up z-50 fixed inset-0 bg-gradient-to-br from-purple-500 to-pink-500 flex flex-col h-screen overflow-hidden">
-        
         <!-- Result Header (Fixed) -->
         <div class="flex-none p-6 pb-2 bg-white/90 backdrop-blur shadow-sm z-10">
             <div id="result-icon" class="text-6xl mb-2">🏆</div>
@@ -329,9 +387,12 @@
         </div>
 
         <!-- Footer Actions (Fixed) -->
-        <div class="flex-none p-4 bg-white/90 backdrop-blur">
+        <div class="flex-none p-4 bg-white/90 backdrop-blur space-y-2">
             <button onclick="requestRematch()" id="rematch-btn" class="w-full bg-[#0071e3] hover:bg-[#0077ED] text-white font-bold py-4 rounded-2xl shadow-lg ios-btn text-lg flex items-center justify-center gap-2">
                 <span>🔄</span> 再来一局
+            </button>
+            <button onclick="disconnectRoom()" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 rounded-2xl shadow-md ios-btn">
+                退出房间
             </button>
         </div>
     </div>
@@ -432,7 +493,7 @@
                 ]
             }
         };
-        
+
         const PUNISHMENTS = [
             "深情演唱/朗诵所选内容 (30秒)", "模仿相关动作拍照", "真心话：说出你最喜欢的3个选项", "用方言朗读所选内容",
             "发个红包给赢家 (金额随意)", "做5个深蹲并一边说所选内容", "让赢家在你的脸上画一个小图案", "大喊三声：我是最强王者！"
@@ -444,9 +505,10 @@
         let myRole = null; // 'host' or 'guest'
         let localPoisonSelection = null;
         let selectedCategory = null;
+        let roomId = null;
         
         let gameState = {
-            status: 'waiting',
+            status: 'waiting', // waiting, category, setup, battle, gameover
             category: null,
             items: [],
             p1Poison: null,
@@ -455,12 +517,13 @@
             currentTurn: 'host',
             winner: null,
             punishment: '',
-            rematchRequests: { host: false, guest: false }
+            rematchRequests: { host: false, guest: false },
+            bothSelectedSame: false // 新增：标记两人是否选择了相同的毒药
         };
 
         // --- UI Functions ---
         function showScreen(name) {
-            ['category', 'lobby', 'waiting', 'setup', 'battle', 'result'].forEach(id => {
+            ['connect', 'category', 'waiting', 'setup', 'battle', 'result'].forEach(id => {
                 document.getElementById(`screen-${id}`).classList.add('hidden');
             });
             document.getElementById(`screen-${name}`).classList.remove('hidden');
@@ -482,39 +545,20 @@
             if (statusEl) statusEl.innerText = msg;
         }
 
-        // --- Category Selection ---
-        function selectCategory(category) {
-            selectedCategory = category;
+        // 显示提示消息
+        function showToast(message, duration = 3000) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
             
-            // 更新UI
-            document.querySelectorAll('.category-card').forEach(card => {
-                card.classList.remove('selected');
-            });
-            document.querySelector(`[data-category="${category}"]`).classList.add('selected');
-            
-            // 延迟显示下一个界面，让用户看到选中效果
             setTimeout(() => {
-                // 更新lobby界面的类别显示
-                const categoryInfo = CATEGORY_LIBRARIES[category];
-                document.getElementById('selected-category-icon').innerText = categoryInfo.icon;
-                document.getElementById('selected-category-name').innerText = categoryInfo.name;
-                
-                // 更新背景主题
-                document.body.className = `min-h-screen flex flex-col items-center justify-center p-4 ${categoryInfo.theme}`;
-                
-                showScreen('lobby');
-            }, 300);
+                toast.classList.remove('show');
+            }, duration);
         }
 
-        function backToCategory() {
-            showScreen('category');
-            document.body.className = 'min-h-screen flex flex-col items-center justify-center p-4';
-        }
-
-        // --- P2P Logic ---
-
+        // --- Room Connection ---
         function createRoom() {
-            const roomId = Math.floor(Math.random() * 900000 + 100000).toString();
+            roomId = Math.floor(Math.random() * 900000 + 100000).toString();
             const peerId = 'witch_game_' + roomId; 
             log("正在连接服务器...");
             peer = new Peer(peerId);
@@ -524,30 +568,32 @@
                 myRole = 'host';
                 document.getElementById('display-room-id').innerText = roomId;
                 showScreen('waiting');
-                startNewGame();
             });
 
             peer.on('connection', (connection) => {
                 conn = connection;
                 setupConnection();
-                gameState.status = 'setup';
+                gameState.status = 'category';
                 syncState();
             });
 
             peer.on('error', (err) => {
                 if(err.type === 'unavailable-id') {
-                    alert("房间号生成冲突，请重试");
-                    location.reload();
+                    showToast("房间号生成冲突，请重试");
+                    createRoom(); // 自动重试
                 } else {
-                    alert("连接错误: " + err.type);
+                    showToast("连接错误: " + err.type);
                 }
             });
         }
 
         function joinRoom() {
             const input = document.getElementById('room-code-input');
-            const roomId = input.value.trim();
-            if (roomId.length !== 6) { alert("请输入6位房间号"); return; }
+            roomId = input.value.trim();
+            if (roomId.length !== 6) {
+                showToast("请输入6位房间号");
+                return;
+            }
 
             const peerId = 'witch_game_' + roomId;
             log("正在查找房间...");
@@ -555,33 +601,82 @@
 
             peer.on('open', () => {
                 conn = peer.connect(peerId);
-                if(!conn) { alert("无法连接"); return; }
+                if(!conn) {
+                    showToast("无法连接");
+                    return;
+                }
                 myRole = 'guest';
                 setupConnection();
             });
 
             peer.on('error', (err) => {
-                alert("无法连接到房间，可能房间号错误或房主已离线");
+                showToast("无法连接到房间，可能房间号错误或房主已离线");
             });
         }
 
+        function disconnectRoom() {
+            if (conn) {
+                conn.close();
+                conn = null;
+            }
+            if (peer) {
+                peer.destroy();
+                peer = null;
+            }
+            
+            // 重置游戏状态
+            gameState = {
+                status: 'waiting',
+                category: null,
+                items: [],
+                p1Poison: null,
+                p2Poison: null,
+                selectedItems: [],
+                currentTurn: 'host',
+                winner: null,
+                punishment: '',
+                rematchRequests: { host: false, guest: false },
+                bothSelectedSame: false
+            };
+            
+            myRole = null;
+            selectedCategory = null;
+            localPoisonSelection = null;
+            roomId = null;
+            
+            // 重置背景
+            document.body.className = 'min-h-screen flex flex-col items-center justify-center p-4';
+            
+            showScreen('connect');
+        }
+
         function setupConnection() {
-            conn.on('open', () => { log("已连接！"); });
+            conn.on('open', () => {
+                log("已连接！");
+                if (myRole === 'guest') {
+                    gameState.status = 'category';
+                    syncState();
+                }
+            });
+            
             conn.on('data', (data) => {
                 if (data.type === 'SYNC') {
                     gameState = data.state;
                     renderGame();
                 }
+                
                 if (myRole === 'host' && data.type === 'ACTION') {
                     handleGuestAction(data.payload);
                 }
+                
                 if (data.type === 'EMOTE') {
                     showEmote(data.emoji);
                 }
             });
+            
             conn.on('close', () => {
-                alert("对方已断开连接");
-                location.reload();
+                showToast("对方已断开连接");
+                disconnectRoom();
             });
         }
 
@@ -607,8 +702,28 @@
             setTimeout(() => el.remove(), 2000);
         }
 
-        // --- Game Logic ---
+        // --- Category Selection ---
+        function selectCategory(category) {
+            selectedCategory = category;
+            
+            // 更新UI
+            document.querySelectorAll('.category-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            document.querySelector(`[data-category="${category}"]`).classList.add('selected');
+            
+            // 延迟显示下一个界面，让用户看到选中效果
+            setTimeout(() => {
+                // 更新背景主题
+                const categoryInfo = CATEGORY_LIBRARIES[category];
+                document.body.className = `min-h-screen flex flex-col items-center justify-center p-4 ${categoryInfo.theme}`;
+                
+                // 开始新游戏
+                startNewGame();
+            }, 300);
+        }
 
+        // --- Game Logic ---
         function startNewGame() {
             const categoryLib = CATEGORY_LIBRARIES[selectedCategory];
             gameState.category = selectedCategory;
@@ -621,7 +736,11 @@
             gameState.currentTurn = 'host';
             gameState.winner = null;
             gameState.rematchRequests = { host: false, guest: false };
+            gameState.bothSelectedSame = false;
             localPoisonSelection = null;
+            
+            gameState.status = 'setup';
+            syncState();
         }
 
         function handleGuestAction(payload) {
@@ -641,6 +760,7 @@
 
         function submitPoison() {
             if (localPoisonSelection === null) return;
+            
             if (myRole === 'host') {
                 gameState.p1Poison = localPoisonSelection;
                 checkSetupComplete();
@@ -648,13 +768,44 @@
             } else {
                 conn.send({ type: 'ACTION', payload: { action: 'SET_POISON', index: localPoisonSelection } });
             }
+            
             document.getElementById('confirm-poison-btn').innerText = "等待对方...";
             document.getElementById('confirm-poison-btn').disabled = true;
         }
 
         function checkSetupComplete() {
             if (gameState.p1Poison !== null && gameState.p2Poison !== null) {
-                gameState.status = 'battle';
+                // 检查是否选择了相同的毒药
+                if (gameState.p1Poison === gameState.p2Poison) {
+                    gameState.bothSelectedSame = true;
+                    showToast("双方选择了相同的毒药！这个选项将被移除，请重新选择");
+                    
+                    // 重置双方的毒药选择
+                    if (myRole === 'host') {
+                        gameState.p1Poison = null;
+                        gameState.p2Poison = null;
+                        localPoisonSelection = null;
+                        
+                        // 移除被选中的选项
+                        const removedItem = gameState.items[gameState.p1Poison];
+                        gameState.items.splice(gameState.p1Poison, 1);
+                        
+                        // 添加一个新选项
+                        const categoryLib = CATEGORY_LIBRARIES[selectedCategory];
+                        const remainingItems = categoryLib.items.filter(item => !gameState.items.includes(item));
+                        const newItem = remainingItems[Math.floor(Math.random() * remainingItems.length)];
+                        gameState.items.push(newItem);
+                        
+                        // 重新打乱
+                        gameState.items = shuffle(gameState.items);
+                        
+                        // 通知客户端
+                        syncState();
+                    }
+                } else {
+                    gameState.status = 'battle';
+                    syncState();
+                }
             }
         }
 
@@ -700,15 +851,18 @@
 
         function checkRematch() {
             if (gameState.rematchRequests.host && gameState.rematchRequests.guest) {
-                startNewGame();
-                gameState.status = 'setup';
+                // 回到主题选择界面
+                gameState.status = 'category';
+                gameState.rematchRequests = { host: false, guest: false };
+                syncState();
             }
         }
 
         // --- Render Logic ---
-
         function renderGame() {
-            if (gameState.status === 'setup') {
+            if (gameState.status === 'category') {
+                showScreen('category');
+            } else if (gameState.status === 'setup') {
                 showScreen('setup');
                 renderSetup();
             } else if (gameState.status === 'battle') {
@@ -731,39 +885,55 @@
             } else if (!isMeReady) {
                 statusBadge.innerText = "请选择";
                 statusBadge.className = "status-badge bg-yellow-100 text-yellow-700";
+            } else if (isMeReady && isOpponentReady) {
+                statusBadge.innerText = "准备就绪";
+                statusBadge.className = "status-badge bg-green-100 text-green-700";
             }
 
             const grid = document.getElementById('setup-grid');
-            if (grid.children.length === 0) {
-                gameState.items.forEach((item, index) => {
-                    const btn = document.createElement('button');
-                    btn.className = "bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-gray-800 font-medium h-16 flex items-center justify-between transition-all active:scale-95";
-                    btn.onclick = () => {
-                        localPoisonSelection = index;
-                        Array.from(grid.children).forEach(b => {
-                            b.className = "bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-gray-800 font-medium h-16 flex items-center justify-between transition-all active:scale-95";
-                            b.querySelector('span:last-child').innerHTML = '✓';
-                            b.querySelector('span:last-child').className = "text-xl opacity-30";
-                        });
-                        btn.className = "bg-blue-50 p-4 rounded-xl shadow-inner border-2 border-blue-500 text-blue-800 font-bold h-16 flex items-center justify-between transform scale-[0.98]";
-                        btn.querySelector('span:last-child').innerHTML = '☠️';
-                        btn.querySelector('span:last-child').className = "text-xl";
-
-                        const cBtn = document.getElementById('confirm-poison-btn');
-                        cBtn.disabled = false;
-                        cBtn.className = "w-full max-w-md bg-[#0071e3] hover:bg-[#0077ED] text-white font-bold py-4 rounded-2xl transition-all duration-300 shadow-lg";
-                        cBtn.innerText = "确认下毒";
-                    };
-                    btn.innerHTML = `<span class="truncate text-sm">${item}</span><span class="text-xl opacity-30">✓</span>`;
-                    grid.appendChild(btn);
-                });
-            }
+            grid.innerHTML = '';
+            
+            gameState.items.forEach((item, index) => {
+                const btn = document.createElement('button');
+                btn.className = "bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-gray-800 font-medium h-16 flex items-center justify-between transition-all active:scale-95 relative";
+                
+                // 如果是自己选择的毒药，添加标记
+                if (index === localPoisonSelection) {
+                    btn.className = "bg-red-50 p-4 rounded-xl shadow-inner border-2 border-red-500 text-red-800 font-bold h-16 flex items-center justify-between transform scale-[0.98] relative";
+                    const marker = document.createElement('div');
+                    marker.className = "poison-marker my-poison";
+                    marker.textContent = "我";
+                    btn.appendChild(marker);
+                }
+                
+                btn.onclick = () => {
+                    localPoisonSelection = index;
+                    renderSetup(); // 重新渲染以更新UI
+                    
+                    const cBtn = document.getElementById('confirm-poison-btn');
+                    cBtn.disabled = false;
+                    cBtn.className = "w-full max-w-md bg-[#0071e3] hover:bg-[#0077ED] text-white font-bold py-4 rounded-2xl transition-all duration-300 shadow-md";
+                    cBtn.innerText = "确认下毒";
+                };
+                
+                const textSpan = document.createElement('span');
+                textSpan.className = "truncate text-sm";
+                textSpan.textContent = item;
+                
+                const iconSpan = document.createElement('span');
+                iconSpan.className = "text-xl opacity-30";
+                iconSpan.textContent = "✓";
+                
+                btn.appendChild(textSpan);
+                btn.appendChild(iconSpan);
+                grid.appendChild(btn);
+            });
 
             if (isMeReady) {
-                 const cBtn = document.getElementById('confirm-poison-btn');
-                 cBtn.innerText = "已确认，等待对方...";
-                 cBtn.disabled = true;
-                 cBtn.className = "w-full max-w-md bg-green-500 text-white font-bold py-4 rounded-2xl shadow-md";
+                const cBtn = document.getElementById('confirm-poison-btn');
+                cBtn.innerText = "已确认，等待对方...";
+                cBtn.disabled = true;
+                cBtn.className = "w-full max-w-md bg-green-500 text-white font-bold py-4 rounded-2xl shadow-md";
             }
         }
 
@@ -786,24 +956,45 @@
 
             const grid = document.getElementById('battle-grid');
             grid.innerHTML = '';
+            
             gameState.items.forEach((item, index) => {
                 const isSelected = gameState.selectedItems.includes(index);
+                const isMyPoison = (myRole === 'host' && index === gameState.p1Poison) || (myRole === 'guest' && index === gameState.p2Poison);
+                const isOppPoison = (myRole === 'host' && index === gameState.p2Poison) || (myRole === 'guest' && index === gameState.p1Poison);
+                
                 const btn = document.createElement('button');
+                btn.className = "h-20 p-2 rounded-xl text-sm relative transition-all duration-300 flex flex-col items-center justify-center font-bold shadow-sm";
                 
                 if (isSelected) {
-                     btn.className = "h-20 p-2 rounded-xl text-sm relative flex flex-col items-center justify-center font-bold shadow-sm bg-gray-100 border border-gray-200 text-gray-400 opacity-60 cursor-not-allowed";
-                     btn.disabled = true;
-                     btn.innerHTML = `<span class="line-through">${item}</span>`;
+                    if (index === gameState.p1Poison || index === gameState.p2Poison) {
+                        // 如果是毒药且被选中
+                        btn.className += " bg-red-100 border-2 border-red-400 text-red-800 opacity-60 cursor-not-allowed";
+                        btn.innerHTML = `<span class="line-through">${item}</span>`;
+                    } else {
+                        // 普通被选中的选项
+                        btn.className += " bg-gray-100 border border-gray-200 text-gray-400 opacity-60 cursor-not-allowed";
+                        btn.innerHTML = `<span class="line-through">${item}</span>`;
+                    }
+                    btn.disabled = true;
                 } else {
-                     if (isMyTurn) {
-                        btn.className = "h-20 p-2 rounded-xl text-sm relative transition-all duration-300 flex flex-col items-center justify-center font-bold shadow-sm bg-white border border-gray-100 text-gray-800 hover:shadow-md active:scale-95 active:bg-gray-50";
+                    if (isMyTurn) {
+                        btn.className += " bg-white border border-gray-100 text-gray-800 hover:shadow-md active:scale-95 active:bg-gray-50";
                         btn.onclick = () => handleBattleClick(index);
-                     } else {
-                        btn.className = "h-20 p-2 rounded-xl text-sm relative flex flex-col items-center justify-center font-bold shadow-sm bg-white border border-gray-100 text-gray-800 opacity-80 cursor-wait";
+                    } else {
+                        btn.className += " bg-white border border-gray-100 text-gray-800 opacity-80 cursor-wait";
                         btn.disabled = true;
-                     }
-                     btn.innerHTML = `<span class="z-10">${item}</span><div class="absolute bottom-1 right-2 text-gray-200 text-xs">👆</div>`;
+                    }
+                    btn.innerHTML = `<span class="z-10">${item}</span><div class="absolute bottom-1 right-2 text-gray-200 text-xs">👆</div>`;
                 }
+                
+                // 添加毒药标记（只有自己能看到自己的毒药）
+                if (isMyPoison && !isSelected) {
+                    const marker = document.createElement('div');
+                    marker.className = "poison-marker my-poison";
+                    marker.textContent = "我";
+                    btn.appendChild(marker);
+                }
+                
                 grid.appendChild(btn);
             });
         }
@@ -838,16 +1029,18 @@
             const myRequest = myRole === 'host' ? gameState.rematchRequests.host : gameState.rematchRequests.guest;
             if (myRequest) {
                 rBtn.innerText = "等待对方...";
-                rBtn.classList.add('opacity-50');
+                rBtn.classList.add("opacity-50");
+                rBtn.disabled = true;
             } else {
                 rBtn.innerText = "🔄 再来一局";
-                rBtn.classList.remove('opacity-50');
+                rBtn.classList.remove("opacity-50");
                 rBtn.disabled = false;
             }
 
             // Review Grid Render
             const grid = document.getElementById('review-grid');
             grid.innerHTML = '';
+            
             gameState.items.forEach((item, index) => {
                 const el = document.createElement('div');
                 let classes = "h-16 rounded-lg text-xs flex flex-col items-center justify-center font-bold relative p-1 text-center ";
@@ -859,11 +1052,11 @@
 
                 if (isMyPoison) {
                     classes += "bg-red-50 border-2 border-red-400 text-red-800 ";
-                    content += `<div class="absolute -top-2 -right-1 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-[8px]">我</div>`;
+                    content += `<div class="poison-marker my-poison">我</div>`;
                 } else if (isOppPoison) {
                     classes += "bg-purple-50 border-2 border-purple-400 text-purple-800 ";
                     if (isSelected) content += `<div class="absolute inset-0 flex items-center justify-center text-4xl opacity-80">💥</div>`;
-                    content += `<div class="absolute -top-2 -right-1 bg-purple-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-[8px]">TA</div>`;
+                    content += `<div class="poison-marker opponent-poison">TA</div>`;
                 } else if (isSelected) {
                     classes += "bg-gray-100 text-gray-400 border border-gray-200 ";
                 } else {
