@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>女巫的毒药 (P2P增强版)</title>
+    <title>女巫的毒药 - 多主题版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- PeerJS (国内 BootCDN 加速) -->
@@ -12,18 +12,19 @@
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
-            background-color: #f5f5f7;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: #1d1d1f;
             overflow-x: hidden;
             -webkit-tap-highlight-color: transparent;
             user-select: none;
+            min-height: 100vh;
         }
 
         .ios-card {
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: saturate(180%) blur(20px);
             border-radius: 20px;
-            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.6);
         }
 
@@ -77,14 +78,56 @@
             font-size: 4rem;
             pointer-events: none;
             z-index: 100;
-            margin-left: -2rem; /* center */
+            margin-left: -2rem;
             animation: floatUp 2s ease-out forwards;
         }
         
-        /* Grid Animations */
-        .grid-cell-reveal {
-            transition: all 0.5s ease;
+        /* Category Card Styles */
+        .category-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
         }
+        
+        .category-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .category-card:hover::before {
+            opacity: 1;
+        }
+        
+        .category-card.selected {
+            transform: scale(0.95);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.5);
+        }
+        
+        /* Icon animation */
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .icon-bounce {
+            animation: bounce 2s infinite;
+        }
+        
+        /* Theme backgrounds */
+        .theme-music { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .theme-food { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+        .theme-city { background: linear-gradient(135deg, #30cfd0 0%, #330867 100%); }
+        .theme-sports { background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); }
+        .theme-movie { background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%); }
+        .theme-tech { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
     </style>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-4">
@@ -92,39 +135,95 @@
     <!-- Emote Overlay Container -->
     <div id="emote-container"></div>
 
-    <!-- Screen 1: Lobby -->
-    <div id="screen-lobby" class="w-full max-w-md space-y-6 slide-up text-center">
+    <!-- Screen 1: Category Selection -->
+    <div id="screen-category" class="w-full max-w-md space-y-6 slide-up text-center">
         <div class="pt-8 pb-4">
-            <h1 class="text-4xl font-extrabold tracking-tight text-gray-900 mb-1">女巫的毒药</h1>
-            <p class="text-gray-500 text-sm font-medium tracking-wide">P2P联机增强版</p>
+            <h1 class="text-4xl font-extrabold tracking-tight text-white mb-2">女巫的毒药</h1>
+            <p class="text-white/80 text-sm font-medium tracking-wide">选择一个主题开始游戏</p>
         </div>
 
-        <div class="space-y-4 px-2">
-            <button onclick="createRoom()" class="w-full bg-[#0071e3] hover:bg-[#0077ED] text-white font-semibold py-5 px-8 rounded-2xl shadow-lg ios-btn flex items-center justify-center gap-3">
-                <span>🏠</span> 创建房间 (我是房主)
-            </button>
+        <div class="grid grid-cols-2 gap-4 px-2">
+            <div onclick="selectCategory('music')" class="category-card ios-card p-6 text-center" data-category="music">
+                <div class="text-4xl mb-2">🎵</div>
+                <h3 class="font-bold text-gray-800">流行音乐</h3>
+                <p class="text-xs text-gray-500 mt-1">经典华语歌曲</p>
+            </div>
             
-            <div class="relative">
-                <div class="absolute inset-0 flex items-center">
-                    <div class="w-full border-t border-gray-300"></div>
-                </div>
-                <div class="relative flex justify-center text-sm">
-                    <span class="px-2 bg-[#f5f5f7] text-gray-500">或者</span>
-                </div>
+            <div onclick="selectCategory('food')" class="category-card ios-card p-6 text-center" data-category="food">
+                <div class="text-4xl mb-2">🍜</div>
+                <h3 class="font-bold text-gray-800">美食天地</h3>
+                <p class="text-xs text-gray-500 mt-1">中外美食料理</p>
             </div>
-
-            <div class="flex gap-2">
-                <input id="room-code-input" type="number" placeholder="输入房主给的房间号" class="flex-1 p-4 rounded-2xl border border-gray-300 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 font-mono text-center text-lg">
-                <button onclick="joinRoom()" class="bg-gray-900 text-white font-semibold px-6 rounded-2xl ios-btn">
-                    加入
-                </button>
+            
+            <div onclick="selectCategory('city')" class="category-card ios-card p-6 text-center" data-category="city">
+                <div class="text-4xl mb-2">🏙️</div>
+                <h3 class="font-bold text-gray-800">世界城市</h3>
+                <p class="text-xs text-gray-500 mt-1">知名城市地标</p>
+            </div>
+            
+            <div onclick="selectCategory('sports')" class="category-card ios-card p-6 text-center" data-category="sports">
+                <div class="text-4xl mb-2">⚽</div>
+                <h3 class="font-bold text-gray-800">体育运动</h3>
+                <p class="text-xs text-gray-500 mt-1">热门运动项目</p>
+            </div>
+            
+            <div onclick="selectCategory('movie')" class="category-card ios-card p-6 text-center" data-category="movie">
+                <div class="text-4xl mb-2">🎬</div>
+                <h3 class="font-bold text-gray-800">影视作品</h3>
+                <p class="text-xs text-gray-500 mt-1">经典电影剧集</p>
+            </div>
+            
+            <div onclick="selectCategory('tech')" class="category-card ios-card p-6 text-center" data-category="tech">
+                <div class="text-4xl mb-2">💻</div>
+                <h3 class="font-bold text-gray-800">科技数码</h3>
+                <p class="text-xs text-gray-500 mt-1">科技产品品牌</p>
             </div>
         </div>
-
-        <div id="connection-status" class="text-xs text-gray-400 mt-4 h-4"></div>
     </div>
 
-    <!-- Screen 2: Waiting Room -->
+    <!-- Screen 2: Lobby -->
+    <div id="screen-lobby" class="hidden w-full max-w-md space-y-6 slide-up text-center">
+        <div class="ios-card p-6">
+            <div class="flex items-center justify-between mb-4">
+                <button onclick="backToCategory()" class="text-gray-400 hover:text-gray-600">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                </button>
+                <div class="text-center">
+                    <div id="selected-category-icon" class="text-3xl mb-1">🎵</div>
+                    <h2 id="selected-category-name" class="text-lg font-bold text-gray-800">流行音乐</h2>
+                </div>
+                <div class="w-6"></div>
+            </div>
+            
+            <div class="space-y-4">
+                <button onclick="createRoom()" class="w-full bg-[#0071e3] hover:bg-[#0077ED] text-white font-semibold py-5 px-8 rounded-2xl shadow-lg ios-btn flex items-center justify-center gap-3">
+                    <span>🏠</span> 创建房间 (我是房主)
+                </button>
+                
+                <div class="relative">
+                    <div class="absolute inset-0 flex items-center">
+                        <div class="w-full border-t border-gray-300"></div>
+                    </div>
+                    <div class="relative flex justify-center text-sm">
+                        <span class="px-2 bg-white text-gray-500">或者</span>
+                    </div>
+                </div>
+
+                <div class="flex gap-2">
+                    <input id="room-code-input" type="number" placeholder="输入房主给的房间号" class="flex-1 p-4 rounded-2xl border border-gray-300 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 font-mono text-center text-lg">
+                    <button onclick="joinRoom()" class="bg-gray-900 text-white font-semibold px-6 rounded-2xl ios-btn">
+                        加入
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="connection-status" class="text-xs text-white/70 mt-4 h-4"></div>
+    </div>
+
+    <!-- Screen 3: Waiting Room -->
     <div id="screen-waiting" class="hidden w-full max-w-md flex-col items-center justify-center h-screen slide-up">
         <div class="ios-card p-8 w-full text-center space-y-6">
             <div class="spinner mx-auto mb-2"></div>
@@ -139,14 +238,14 @@
         </div>
     </div>
 
-    <!-- Screen 3: Setup Phase -->
+    <!-- Screen 4: Setup Phase -->
     <div id="screen-setup" class="hidden w-full max-w-md flex-col h-screen py-6">
         <div class="flex-none mb-4 px-4">
             <div class="flex justify-between items-center mb-1">
                 <h2 class="text-2xl font-bold text-gray-900">选择毒药</h2>
                 <span id="setup-status" class="status-badge bg-yellow-100 text-yellow-700">等待双方准备</span>
             </div>
-            <p class="text-gray-500 text-sm">点击一首歌设为陷阱，对方不可见</p>
+            <p class="text-gray-500 text-sm">点击一个选项设为陷阱，对方不可见</p>
         </div>
 
         <div class="flex-grow overflow-y-auto px-2 pb-24">
@@ -157,12 +256,12 @@
 
         <div class="fixed bottom-6 left-0 right-0 px-6 flex justify-center z-20">
              <button id="confirm-poison-btn" disabled onclick="submitPoison()" class="w-full max-w-md bg-gray-200 text-gray-400 font-bold py-4 rounded-2xl transition-all duration-300 shadow-md">
-                请选择一首歌
+                请选择一个选项
             </button>
         </div>
     </div>
 
-    <!-- Screen 4: Battle Phase -->
+    <!-- Screen 5: Battle Phase -->
     <div id="screen-battle" class="hidden w-full max-w-md flex-col h-screen py-4 relative">
         <!-- Battle Header -->
         <div class="flex-none mb-4 mx-2 bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
@@ -200,14 +299,14 @@
         </div>
     </div>
 
-    <!-- Screen 5: Game Over / Review -->
-    <div id="screen-result" class="hidden w-full max-w-md text-center slide-up z-50 fixed inset-0 bg-[#f5f5f7] flex flex-col h-screen overflow-hidden">
+    <!-- Screen 6: Game Over / Review -->
+    <div id="screen-result" class="hidden w-full max-w-md text-center slide-up z-50 fixed inset-0 bg-gradient-to-br from-purple-500 to-pink-500 flex flex-col h-screen overflow-hidden">
         
         <!-- Result Header (Fixed) -->
-        <div class="flex-none p-6 pb-2 bg-white shadow-sm z-10">
+        <div class="flex-none p-6 pb-2 bg-white/90 backdrop-blur shadow-sm z-10">
             <div id="result-icon" class="text-6xl mb-2">🏆</div>
             <h2 id="result-title" class="text-3xl font-black text-gray-900 mb-1">胜利!</h2>
-            <p id="result-desc" class="text-lg text-gray-500">对方喝下了毒药</p>
+            <p id="result-desc" class="text-lg text-gray-500">对方踩中了陷阱</p>
             
             <div class="mt-4 bg-yellow-50 border border-yellow-200 rounded-xl p-3">
                 <span class="text-xs font-bold text-yellow-700 uppercase">惩罚</span>
@@ -216,12 +315,12 @@
         </div>
 
         <!-- Review Grid (Scrollable) -->
-        <div class="flex-grow overflow-y-auto p-4 bg-[#f5f5f7]">
+        <div class="flex-grow overflow-y-auto p-4">
             <div class="flex items-center justify-between mb-2 px-2">
-                <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider">战局复盘</h3>
+                <h3 class="text-sm font-bold text-white/80 uppercase tracking-wider">战局复盘</h3>
                 <div class="flex gap-3 text-xs">
-                    <div class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-red-500"></span>我下的毒</div>
-                    <div class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-purple-500"></span>TA下的毒</div>
+                    <div class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-red-500"></span>我的陷阱</div>
+                    <div class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-purple-500"></span>TA的陷阱</div>
                 </div>
             </div>
             <div id="review-grid" class="grid grid-cols-4 gap-2 opacity-90">
@@ -230,7 +329,7 @@
         </div>
 
         <!-- Footer Actions (Fixed) -->
-        <div class="flex-none p-4 bg-white border-t border-gray-200">
+        <div class="flex-none p-4 bg-white/90 backdrop-blur">
             <button onclick="requestRematch()" id="rematch-btn" class="w-full bg-[#0071e3] hover:bg-[#0077ED] text-white font-bold py-4 rounded-2xl shadow-lg ios-btn text-lg flex items-center justify-center gap-2">
                 <span>🔄</span> 再来一局
             </button>
@@ -238,21 +337,105 @@
     </div>
 
     <script>
-        const SONG_LIBRARY = [
-            "七里香", "孤勇者", "成都", "演员", "后来", "晴天", "十年", "稻香", "简单爱", "告白气球", "体面", "凉凉", "逆战", "泡沫", "遇见", "小幸运",
-            "青花瓷", "本草纲目", "龙卷风", "搁浅", "安静", "听妈妈的话", "千里之外", "菊花台", "夜曲", "彩虹", "发如雪", "甜甜的", "蒲公英的约定", "最长的电影",
-            "江南", "一千年以后", "曹操", "小酒窝", "修炼爱情", "可惜没如果", "不为谁而作的歌", "背对背拥抱", "她说", "第几个100天",
-            "童话", "勇气", "暖暖", "分手快乐", "崇拜", "燕尾蝶", "宁夏", "情歌", "可惜不是你", "会呼吸的痛",
-            "唯一", "依然爱你", "大城小爱", "改变自己", "心中的日月", "花田错", "我们的歌", "需要人陪", "你不知道的事",
-            "吻别", "一路上有你", "遥远的她", "每天爱你多一些", "饿狼传说", "头发乱了", "慢慢", "只想一生跟你走",
-            "海阔天空", "光辉岁月", "真的爱你", "不再犹豫", "喜欢你", "情人", "大地", "Amani",
-            "红豆", "匆匆那年", "因为爱情", "容易受伤的女人", "流年", "传奇", "人间", "笑忘书",
-            "大鱼", "起风了", "消愁", "像我这样的人", "平凡之路", "南山南", "夜空中最亮的星", "追梦赤子心", "蓝莲花", "曾经的你"
-        ];
+        // 扩展题库 - 多类别
+        const CATEGORY_LIBRARIES = {
+            music: {
+                name: "流行音乐",
+                icon: "🎵",
+                theme: "theme-music",
+                items: [
+                    "七里香", "孤勇者", "成都", "演员", "后来", "晴天", "十年", "稻香", "简单爱", "告白气球", 
+                    "体面", "凉凉", "逆战", "泡沫", "遇见", "小幸运", "青花瓷", "本草纲目", "龙卷风", "搁浅",
+                    "安静", "听妈妈的话", "千里之外", "菊花台", "夜曲", "彩虹", "发如雪", "甜甜的", "蒲公英的约定", "最长的电影",
+                    "江南", "一千年以后", "曹操", "小酒窝", "修炼爱情", "可惜没如果", "不为谁而作的歌", "背对背拥抱", "她说", "第几个100天",
+                    "童话", "勇气", "暖暖", "分手快乐", "崇拜", "燕尾蝶", "宁夏", "情歌", "可惜不是你", "会呼吸的痛",
+                    "唯一", "依然爱你", "大城小爱", "改变自己", "心中的日月", "花田错", "我们的歌", "需要人陪", "你不知道的事",
+                    "吻别", "一路上有你", "遥远的她", "每天爱你多一些", "饿狼传说", "头发乱了", "慢慢", "只想一生跟你走",
+                    "海阔天空", "光辉岁月", "真的爱你", "不再犹豫", "喜欢你", "情人", "大地", "Amani",
+                    "红豆", "匆匆那年", "因为爱情", "容易受伤的女人", "流年", "传奇", "人间", "笑忘书",
+                    "大鱼", "起风了", "消愁", "像我这样的人", "平凡之路", "南山南", "夜空中最亮的星", "追梦赤子心", "蓝莲花", "曾经的你"
+                ]
+            },
+            food: {
+                name: "美食天地",
+                icon: "🍜",
+                theme: "theme-food",
+                items: [
+                    "北京烤鸭", "麻婆豆腐", "宫保鸡丁", "鱼香肉丝", "回锅肉", "水煮鱼", "火锅", "小笼包", "煎饼果子", "肉夹馍",
+                    "兰州拉面", "刀削面", "炸酱面", "热干面", "担担面", "过桥米线", "螺蛳粉", "桂林米粉", "沙县小吃", "黄焖鸡",
+                    "寿司", "拉面", "天妇罗", "刺身", "章鱼烧", "大阪烧", "烤肉", "泡菜", "石锅拌饭", "部队锅",
+                    "披萨", "意大利面", "焗饭", "牛排", "汉堡", "热狗", "薯条", "沙拉", "三明治", "可颂",
+                    "提拉米苏", "马卡龙", "芝士蛋糕", "慕斯", "布朗尼", "曲奇", "泡芙", "甜甜圈", "华夫饼", "松饼",
+                    "珍珠奶茶", "咖啡", "果汁", "可乐", "啤酒", "红酒", "清酒", "威士忌", "鸡尾酒", "茶",
+                    "小龙虾", "大闸蟹", "烤串", "麻辣烫", "串串香", "冒菜", "钵钵鸡", "烤鱼", "酸菜鱼", "毛血旺",
+                    "蛋炒饭", "扬州炒饭", "煲仔饭", "咖喱饭", "盖浇饭", "便当", "寿喜烧", "涮羊肉", "烤全羊", "叫花鸡"
+                ]
+            },
+            city: {
+                name: "世界城市",
+                icon: "🏙️",
+                theme: "theme-city",
+                items: [
+                    "北京", "上海", "广州", "深圳", "成都", "杭州", "西安", "重庆", "武汉", "南京",
+                    "天津", "苏州", "青岛", "厦门", "大连", "哈尔滨", "长沙", "郑州", "昆明", "三亚",
+                    "东京", "大阪", "京都", "首尔", "釜山", "曼谷", "新加坡", "吉隆坡", "雅加达", "马尼拉",
+                    "纽约", "洛杉矶", "旧金山", "芝加哥", "华盛顿", "波士顿", "迈阿密", "西雅图", "拉斯维加斯", "新奥尔良",
+                    "伦敦", "巴黎", "罗马", "柏林", "阿姆斯特丹", "巴塞罗那", "马德里", "维也纳", "布拉格", "布达佩斯",
+                    "莫斯科", "圣彼得堡", "伊斯坦布尔", "开罗", "迪拜", "多哈", "特拉维夫", "耶路撒冷", "雅典", "圣托里尼",
+                    "悉尼", "墨尔本", "奥克兰", "惠灵顿", "珀斯", "布里斯班", "黄金海岸", "凯恩斯", "皇后镇", "斐济",
+                    "里约热内卢", "圣保罗", "布宜诺斯艾利斯", "利马", "波哥大", "圣地亚哥", "蒙特利尔", "温哥华", "多伦多", "墨西哥城"
+                ]
+            },
+            sports: {
+                name: "体育运动",
+                icon: "⚽",
+                theme: "theme-sports",
+                items: [
+                    "足球", "篮球", "网球", "羽毛球", "乒乓球", "排球", "棒球", "橄榄球", "高尔夫", "台球",
+                    "游泳", "跳水", "水球", "花样游泳", "冲浪", "帆船", "赛艇", "皮划艇", "龙舟", "摩托艇",
+                    "田径", "短跑", "长跑", "马拉松", "跨栏", "跳高", "跳远", "铅球", "铁饼", "标枪",
+                    "体操", "艺术体操", "蹦床", "瑜伽", "普拉提", "舞蹈", "啦啦操", "健美操", "武术", "跆拳道",
+                    "拳击", "摔跤", "柔道", "空手道", "剑道", "击剑", "散打", "泰拳", "相扑", "综合格斗",
+                    "滑雪", "滑冰", "冰球", "冰壶", "雪橇", "雪车", "冬季两项", "跳台滑雪", "单板滑雪", "越野滑雪",
+                    "自行车", "山地车", "公路赛", "场地赛", "小轮车", "摩托车", "赛车", "拉力赛", "卡丁车", "方程式",
+                    "攀岩", "登山", "徒步", "露营", "野营", "钓鱼", "狩猎", "射箭", "飞镖", "保龄球"
+                ]
+            },
+            movie: {
+                name: "影视作品",
+                icon: "🎬",
+                theme: "theme-movie",
+                items: [
+                    "阿凡达", "泰坦尼克号", "星球大战", "指环王", "哈利波特", "复仇者联盟", "变形金刚", "速度与激情", "碟中谍", "007系列",
+                    "教父", "肖申克的救赎", "这个杀手不太冷", "低俗小说", "搏击俱乐部", "美丽人生", "辛德勒的名单", "阿甘正传", "海上钢琴师", "天堂电影院",
+                    "千与千寻", "龙猫", "你的名字", "天气之子", "声之形", "秒速五厘米", "言叶之庭", "穿越时空的少女", "夏日大作战", "狼的孩子雨和雪",
+                    "流浪地球", "战狼", "红海行动", "我不是药神", "哪吒之魔童降世", "姜子牙", "白蛇缘起", "大圣归来", "大鱼海棠", "寻梦环游记",
+                    "权力的游戏", "绝命毒师", "老友记", "生活大爆炸", "西部世界", "黑镜", "怪奇物语", "纸牌屋", "行尸走肉", "越狱",
+                    "卧虎藏龙", "英雄", "十面埋伏", "满城尽带黄金甲", "无间道", "让子弹飞", "我不是潘金莲", "芳华", "唐人街探案", "捉妖记",
+                    "功夫", "大话西游", "喜剧之王", "长江七号", "美人鱼", "西游降魔篇", "功夫瑜伽", "唐伯虎点秋香", "九品芝麻官", "食神",
+                    "寄生虫", "燃烧", "釜山行", "暗杀", "鸣梁海战", "老男孩", "杀人回忆", "阳光姐妹淘", "我的野蛮女友", "假如爱有天意"
+                ]
+            },
+            tech: {
+                name: "科技数码",
+                icon: "💻",
+                theme: "theme-tech",
+                items: [
+                    "iPhone", "iPad", "MacBook", "AirPods", "Apple Watch", "iMac", "Mac mini", "HomePod", "Apple TV", "Vision Pro",
+                    "华为", "小米", "OPPO", "vivo", "荣耀", "一加", "realme", "魅族", "努比亚", "中兴",
+                    "三星", "LG", "索尼", "夏普", "松下", "东芝", "富士通", "NEC", "京瓷", "卡西欧",
+                    "Windows", "Office", "Surface", "Xbox", "Azure", "Outlook", "Teams", "Skype", "Edge", "Bing",
+                    "Android", "Chrome", "YouTube", "Gmail", "Google Maps", "Drive", "Docs", "Photos", "Pixel", "Nest",
+                    "Intel", "AMD", "NVIDIA", "Qualcomm", "MediaTek", "Broadcom", "Texas Instruments", "ARM", "Raspberry Pi", "Arduino",
+                    "Tesla", "SpaceX", "Amazon", "Facebook", "Twitter", "Instagram", "WhatsApp", "TikTok", "Netflix", "Spotify",
+                    "5G", "WiFi", "蓝牙", "NFC", "USB", "Thunderbolt", "HDMI", "DisplayPort", "VR", "AR"
+                ]
+            }
+        };
         
         const PUNISHMENTS = [
-            "深情演唱这首歌的副歌 (30秒)", "模仿原唱的经典动作拍照", "真心话：说出你现在的屏保是谁", "用方言朗读这首歌的歌词",
-            "发个红包给赢家 (金额随意)", "做5个深蹲并一边唱这首歌", "让赢家在你的脸上画一个小图案", "大喊三声：我是麦霸！"
+            "深情演唱/朗诵所选内容 (30秒)", "模仿相关动作拍照", "真心话：说出你最喜欢的3个选项", "用方言朗读所选内容",
+            "发个红包给赢家 (金额随意)", "做5个深蹲并一边说所选内容", "让赢家在你的脸上画一个小图案", "大喊三声：我是最强王者！"
         ];
 
         // --- P2P Global State ---
@@ -260,14 +443,16 @@
         let conn = null;
         let myRole = null; // 'host' or 'guest'
         let localPoisonSelection = null;
+        let selectedCategory = null;
         
         let gameState = {
             status: 'waiting',
-            songs: [],
-            p1Poison: null, // Host Poison
-            p2Poison: null, // Guest Poison
-            sungSongs: [],
-            currentTurn: 'host', // 'host' or 'guest'
+            category: null,
+            items: [],
+            p1Poison: null,
+            p2Poison: null,
+            selectedItems: [],
+            currentTurn: 'host',
             winner: null,
             punishment: '',
             rematchRequests: { host: false, guest: false }
@@ -275,7 +460,7 @@
 
         // --- UI Functions ---
         function showScreen(name) {
-            ['lobby', 'waiting', 'setup', 'battle', 'result'].forEach(id => {
+            ['category', 'lobby', 'waiting', 'setup', 'battle', 'result'].forEach(id => {
                 document.getElementById(`screen-${id}`).classList.add('hidden');
             });
             document.getElementById(`screen-${name}`).classList.remove('hidden');
@@ -293,7 +478,37 @@
 
         function log(msg) {
             console.log(msg);
-            document.getElementById('connection-status').innerText = msg;
+            const statusEl = document.getElementById('connection-status');
+            if (statusEl) statusEl.innerText = msg;
+        }
+
+        // --- Category Selection ---
+        function selectCategory(category) {
+            selectedCategory = category;
+            
+            // 更新UI
+            document.querySelectorAll('.category-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            document.querySelector(`[data-category="${category}"]`).classList.add('selected');
+            
+            // 延迟显示下一个界面，让用户看到选中效果
+            setTimeout(() => {
+                // 更新lobby界面的类别显示
+                const categoryInfo = CATEGORY_LIBRARIES[category];
+                document.getElementById('selected-category-icon').innerText = categoryInfo.icon;
+                document.getElementById('selected-category-name').innerText = categoryInfo.name;
+                
+                // 更新背景主题
+                document.body.className = `min-h-screen flex flex-col items-center justify-center p-4 ${categoryInfo.theme}`;
+                
+                showScreen('lobby');
+            }, 300);
+        }
+
+        function backToCategory() {
+            showScreen('category');
+            document.body.className = 'min-h-screen flex flex-col items-center justify-center p-4';
         }
 
         // --- P2P Logic ---
@@ -376,7 +591,7 @@
         }
 
         function sendEmote(emoji) {
-            showEmote(emoji); // Show locally
+            showEmote(emoji);
             if (conn && conn.open) conn.send({ type: 'EMOTE', emoji: emoji });
         }
 
@@ -385,7 +600,6 @@
             const el = document.createElement('div');
             el.className = 'emote-float';
             el.innerText = emoji;
-            // Randomize position slightly
             const randomX = Math.random() * 40 - 20; 
             el.style.transform = `translateX(${randomX}px)`;
             
@@ -396,12 +610,14 @@
         // --- Game Logic ---
 
         function startNewGame() {
-            gameState.songs = shuffle([...SONG_LIBRARY]).slice(0, 16);
-            gameState.songs = shuffle(gameState.songs);
+            const categoryLib = CATEGORY_LIBRARIES[selectedCategory];
+            gameState.category = selectedCategory;
+            gameState.items = shuffle([...categoryLib.items]).slice(0, 16);
+            gameState.items = shuffle(gameState.items);
             gameState.punishment = PUNISHMENTS[Math.floor(Math.random() * PUNISHMENTS.length)];
             gameState.p1Poison = null;
             gameState.p2Poison = null;
-            gameState.sungSongs = [];
+            gameState.selectedItems = [];
             gameState.currentTurn = 'host';
             gameState.winner = null;
             gameState.rematchRequests = { host: false, guest: false };
@@ -413,7 +629,7 @@
                 gameState.p2Poison = payload.index;
                 checkSetupComplete();
             }
-            if (payload.action === 'CLICK_SONG') {
+            if (payload.action === 'CLICK_ITEM') {
                 processTurn(payload.index);
             }
             if (payload.action === 'REMATCH') {
@@ -447,12 +663,12 @@
                 processTurn(index);
                 syncState();
             } else {
-                conn.send({ type: 'ACTION', payload: { action: 'CLICK_SONG', index: index } });
+                conn.send({ type: 'ACTION', payload: { action: 'CLICK_ITEM', index: index } });
             }
         }
 
         function processTurn(index) {
-            if (gameState.sungSongs.includes(index)) return;
+            if (gameState.selectedItems.includes(index)) return;
 
             const currentActor = gameState.currentTurn; 
             const opponentPoison = currentActor === 'host' ? gameState.p2Poison : gameState.p1Poison;
@@ -460,9 +676,9 @@
             if (index === opponentPoison) {
                 gameState.status = 'gameover';
                 gameState.winner = currentActor === 'host' ? 'guest' : 'host';
-                gameState.sungSongs.push(index);
+                gameState.selectedItems.push(index);
             } else {
-                gameState.sungSongs.push(index);
+                gameState.selectedItems.push(index);
                 gameState.currentTurn = currentActor === 'host' ? 'guest' : 'host';
             }
         }
@@ -486,7 +702,6 @@
             if (gameState.rematchRequests.host && gameState.rematchRequests.guest) {
                 startNewGame();
                 gameState.status = 'setup';
-                // Reset UI for both via syncState
             }
         }
 
@@ -520,14 +735,14 @@
 
             const grid = document.getElementById('setup-grid');
             if (grid.children.length === 0) {
-                gameState.songs.forEach((song, index) => {
+                gameState.items.forEach((item, index) => {
                     const btn = document.createElement('button');
                     btn.className = "bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-gray-800 font-medium h-16 flex items-center justify-between transition-all active:scale-95";
                     btn.onclick = () => {
                         localPoisonSelection = index;
                         Array.from(grid.children).forEach(b => {
                             b.className = "bg-white p-4 rounded-xl shadow-sm border border-gray-100 text-gray-800 font-medium h-16 flex items-center justify-between transition-all active:scale-95";
-                            b.querySelector('span:last-child').innerHTML = '🎵';
+                            b.querySelector('span:last-child').innerHTML = '✓';
                             b.querySelector('span:last-child').className = "text-xl opacity-30";
                         });
                         btn.className = "bg-blue-50 p-4 rounded-xl shadow-inner border-2 border-blue-500 text-blue-800 font-bold h-16 flex items-center justify-between transform scale-[0.98]";
@@ -539,7 +754,7 @@
                         cBtn.className = "w-full max-w-md bg-[#0071e3] hover:bg-[#0077ED] text-white font-bold py-4 rounded-2xl transition-all duration-300 shadow-lg";
                         cBtn.innerText = "确认下毒";
                     };
-                    btn.innerHTML = `<span class="truncate text-sm">${song}</span><span class="text-xl opacity-30">🎵</span>`;
+                    btn.innerHTML = `<span class="truncate text-sm">${item}</span><span class="text-xl opacity-30">✓</span>`;
                     grid.appendChild(btn);
                 });
             }
@@ -559,7 +774,7 @@
             const safeCount = document.getElementById('safe-count');
 
             if (isMyTurn) {
-                statusText.innerText = "轮到你了！请点歌";
+                statusText.innerText = "轮到你了！";
                 statusText.className = "text-lg font-bold text-[#0071e3] animate-pulse";
                 turnIndicator.className = "bg-[#0071e3] h-1.5 rounded-full transition-all duration-500";
             } else {
@@ -567,18 +782,18 @@
                 statusText.className = "text-lg font-bold text-gray-500";
                 turnIndicator.className = "bg-gray-300 h-1.5 rounded-full transition-all duration-500";
             }
-            safeCount.innerText = 16 - gameState.sungSongs.length;
+            safeCount.innerText = 16 - gameState.selectedItems.length;
 
             const grid = document.getElementById('battle-grid');
             grid.innerHTML = '';
-            gameState.songs.forEach((song, index) => {
-                const isSung = gameState.sungSongs.includes(index);
+            gameState.items.forEach((item, index) => {
+                const isSelected = gameState.selectedItems.includes(index);
                 const btn = document.createElement('button');
                 
-                if (isSung) {
+                if (isSelected) {
                      btn.className = "h-20 p-2 rounded-xl text-sm relative flex flex-col items-center justify-center font-bold shadow-sm bg-gray-100 border border-gray-200 text-gray-400 opacity-60 cursor-not-allowed";
                      btn.disabled = true;
-                     btn.innerHTML = `<span class="line-through">${song}</span>`;
+                     btn.innerHTML = `<span class="line-through">${item}</span>`;
                 } else {
                      if (isMyTurn) {
                         btn.className = "h-20 p-2 rounded-xl text-sm relative transition-all duration-300 flex flex-col items-center justify-center font-bold shadow-sm bg-white border border-gray-100 text-gray-800 hover:shadow-md active:scale-95 active:bg-gray-50";
@@ -587,7 +802,7 @@
                         btn.className = "h-20 p-2 rounded-xl text-sm relative flex flex-col items-center justify-center font-bold shadow-sm bg-white border border-gray-100 text-gray-800 opacity-80 cursor-wait";
                         btn.disabled = true;
                      }
-                     btn.innerHTML = `<span class="z-10">${song}</span><div class="absolute bottom-1 right-2 text-gray-200 text-xs">🎤</div>`;
+                     btn.innerHTML = `<span class="z-10">${item}</span><div class="absolute bottom-1 right-2 text-gray-200 text-xs">👆</div>`;
                 }
                 grid.appendChild(btn);
             });
@@ -610,12 +825,12 @@
                 icon.innerText = "🏆";
                 title.innerText = "胜利!";
                 title.className = "text-3xl font-black text-[#0071e3] mb-1";
-                desc.innerText = "对方喝下了你设的毒药";
+                desc.innerText = "对方踩中了你的陷阱";
             } else {
                 icon.innerText = "💥";
                 title.innerText = "失败!";
                 title.className = "text-3xl font-black text-red-500 mb-1";
-                desc.innerText = "你喝下了对方的毒药";
+                desc.innerText = "你踩中了对方的陷阱";
             }
 
             // Rematch Button Reset
@@ -633,12 +848,12 @@
             // Review Grid Render
             const grid = document.getElementById('review-grid');
             grid.innerHTML = '';
-            gameState.songs.forEach((song, index) => {
+            gameState.items.forEach((item, index) => {
                 const el = document.createElement('div');
                 let classes = "h-16 rounded-lg text-xs flex flex-col items-center justify-center font-bold relative p-1 text-center ";
-                let content = `<span>${song}</span>`;
+                let content = `<span>${item}</span>`;
 
-                const isSung = gameState.sungSongs.includes(index);
+                const isSelected = gameState.selectedItems.includes(index);
                 const isMyPoison = (index === myPoisonIndex);
                 const isOppPoison = (index === oppPoisonIndex);
 
@@ -647,9 +862,9 @@
                     content += `<div class="absolute -top-2 -right-1 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-[8px]">我</div>`;
                 } else if (isOppPoison) {
                     classes += "bg-purple-50 border-2 border-purple-400 text-purple-800 ";
+                    if (isSelected) content += `<div class="absolute inset-0 flex items-center justify-center text-4xl opacity-80">💥</div>`;
                     content += `<div class="absolute -top-2 -right-1 bg-purple-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-[8px]">TA</div>`;
-                    if (isSung) content += `<div class="absolute inset-0 flex items-center justify-center text-4xl opacity-80">💥</div>`; // Fatal hit
-                } else if (isSung) {
+                } else if (isSelected) {
                     classes += "bg-gray-100 text-gray-400 border border-gray-200 ";
                 } else {
                     classes += "bg-white text-gray-600 border border-gray-100 ";
