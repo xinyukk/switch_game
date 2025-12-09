@@ -370,9 +370,7 @@
             <h2 id="result-title" class="text-3xl font-black text-gray-900 mb-1">胜利!</h2>
             <p id="result-desc" class="text-lg text-gray-500">对方踩中了陷阱</p>
             
-            <div id="both-poison-info" class="hidden mt-2 p-2 bg-amber-50 rounded-lg border border-amber-200">
-                <p class="text-sm text-amber-800 font-medium">双方选择了相同的毒药！</p>
-            </div>
+            <!-- 移除了双方选择相同毒药的提示信息 -->
             
             <div class="mt-4 bg-yellow-50 border border-yellow-200 rounded-xl p-3">
                 <span class="text-xs font-bold text-yellow-700 uppercase">惩罚</span>
@@ -787,7 +785,7 @@
                 // 检查是否选择了相同的毒药
                 if (gameState.p1Poison === gameState.p2Poison) {
                     gameState.bothSelectedSame = true;
-
+                    // 移除了 showToast 调用，不再显示提示信息
                 }
                 
                 gameState.status = 'battle';
@@ -992,8 +990,8 @@
                 if (isMyPoison && !isSelected) {
                     const marker = document.createElement('div');
                     if (isBothPoison) {
-                        marker.className = "poison-marker both-poison";
-                        marker.textContent = "共";
+                        marker.className = "poison-marker my-poison";
+                        marker.textContent = "我";
                     } else {
                         marker.className = "poison-marker my-poison";
                         marker.textContent = "我";
@@ -1015,16 +1013,10 @@
             const title = document.getElementById('result-title');
             const desc = document.getElementById('result-desc');
             const punish = document.getElementById('result-punishment');
-            const bothPoisonInfo = document.getElementById('both-poison-info');
 
             punish.innerText = gameState.punishment;
 
-            // 显示双方选择相同毒药的信息
-            if (gameState.bothSelectedSame) {
-                bothPoisonInfo.classList.remove('hidden');
-            } else {
-                bothPoisonInfo.classList.add('hidden');
-            }
+            // 移除了显示双方选择相同毒药的信息
 
             if (isWinner) {
                 icon.innerText = "🏆";
